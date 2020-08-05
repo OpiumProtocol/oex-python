@@ -1,5 +1,6 @@
+from decimal import Decimal, getcontext
 from http import HTTPStatus
-from typing import Optional
+from typing import Optional, List, Union
 
 import requests
 
@@ -8,7 +9,7 @@ from requests import Response
 from libs.py_eth_sig_utils.signing import v_r_s_to_signature, sign_typed_data
 
 
-from opium_api.enums import HttpMethod
+from opium_api.enums import HttpMethod, OrderBookAction
 from opium_api.constants import API_VERSION, API_HOST
 from opium_api.exceptions import APIException, UnknownHttpMethod
 
@@ -25,19 +26,18 @@ class Connector:
         self.__private_key: bytes = bytes.fromhex(private_key)
         self.__public_key: str = public_key
 
-    def __signe_message(self):
-        raise NotImplemented
+    def __signe_message(self, msg: dict) -> str:
+        return v_r_s_to_signature(*sign_typed_data(msg, self.__private_key)).hex()
 
     def __generate_access_token(self):
-        message_for_signing = self.__api_auth_logindata()
-        self.__access_token = v_r_s_to_signature(*sign_typed_data(message_for_signing, self.__private_key)).hex()
+        self.__access_token = self.__signe_message(self.__api_auth_logindata())
 
     def __make_public_call(self,
                            endpoint: str,
                            method: HttpMethod,
                            headers: Optional[dict] = None,
                            arguments: Optional[dict] = None,
-                           data: Optional[dict] = None) -> Response:
+                           data: Union[Optional[dict], Optional[list]] = None) -> Response:
         headers = headers or dict()
         arguments = arguments or dict()
         data = data or dict()
@@ -59,7 +59,7 @@ class Connector:
                            endpoint: str,
                            method: HttpMethod,
                            arguments: Optional[dict] = None,
-                           data: Optional[dict] = None) -> Response:
+                           data: Union[Optional[dict], Optional[list]] = None) -> Response:
         if not self.__access_token:
             self.__generate_access_token()
 
@@ -77,20 +77,19 @@ class Connector:
         """
         GET /auth/loginData
         """
-        ret = self.__make_secure_call(endpoint='/auth/loginData', method=HttpMethod.get)
+        ret = self.__make_public_call(endpoint='/auth/loginData', method=HttpMethod.get)
 
         if ret.status_code != HTTPStatus.OK:
             raise APIException('Unable to get login data')
 
         return ret.json()
 
-    def __api_wallet_balance_tokens(self):
+    def __api_wallet_balance_tokens(self) -> dict:
         """
         GET /wallet/balance/tokens
         """
         arguments = {
             'authAddress': self.__public_key
-
         }
 
         ret = self.__make_secure_call(endpoint='/wallet/balance/tokens',
@@ -106,17 +105,73 @@ class Connector:
 
         return ret.json()
 
-    def __api_orderbook_formorder(self):
+    def __api_orderbook_formorder(self,
+                                  action: OrderBookAction,
+                                  ticker_hash: str,
+                                  currency_hash: str,
+                                  price: Decimal,
+                                  quantity: int,
+                                  expires_at: int) -> List[dict]:
         """
         POST /orderbook/formOrder
         """
-        raise NotImplemented
+        arguments = {
+            'authAddress': self.__public_key
+        }
 
-    def __api_orderbook_orders(self):
+        getcontext().prec = 3
+
+        data = {
+            'action': action.value,
+            'price': float(price),
+            'ticker': ticker_hash,
+            'quantity': quantity,
+            'expiresAt': expires_at,
+            'currency': currency_hash
+        }
+
+        ret = self.__make_secure_call(endpoint='/orderbook/formOrder',
+                                      method=HttpMethod.post,
+                                      arguments=arguments,
+                                      data=data)
+
+        # TODO:
+        #   Status: 401 - Unauthorized
+        #   Status: 403 - Forbidden
+        #   Status: 422 - Unprocessable entity
+        #   Status: 429 - Too many requests
+        return ret.json()
+
+    def __api_orderbook_orders(self, order_id: int, signature: str):
         """
         POST /orderbook/orders
         """
-        raise NotImplemented
+        arguments = {
+            'authAddress': self.__public_key
+        }
+
+        data = [
+            {
+                'id': order_id,
+                'signature': f'0x{signature}'
+            }
+        ]
+
+        ret = self.__make_secure_call(endpoint='/orderbook/orders',
+                                      method=HttpMethod.post,
+                                      arguments=arguments,
+                                      data=data)
+
+        # TODO:
+        #   Status: 201 - Created
+        #   Status: 401 - Unauthorized
+        #   Status: 403 - Forbidden
+        #   Status: 404 - Not found
+        #   Status: 409 - Conflict
+        #   Status: 412 - Precondition Failed
+        #   Status: 422 - Unprocessable entity
+        #   Status: 429 - Too many requests
+        return ret
 
     def __api_orderbook_cancel(self):
         """
@@ -124,11 +179,35 @@ class Connector:
         """
         raise NotImplemented
 
-    def __prepare_order(self):
-        raise NotImplemented
+    def __prepare_order(self,
+                        action: OrderBookAction,
+                        ticker_hash: str,
+                        currency_hash: str,
+                        price: Decimal,
+                        quantity: int,
+                        expires_at: int) -> dict:
+        orders_for_sign: List[dict] = self.__api_orderbook_formorder(action=action,
+                                                                     ticker_hash=ticker_hash,
+                                                                     currency_hash=currency_hash,
+                                                                     price=price,
+                                                                     quantity=quantity,
+                                                                     expires_at=expires_at)
+        if not orders_for_sign:
+            # TODO: Ask @Alirun
+            raise ValueError
 
-    def __create_order(self):
-        raise NotImplemented
+        return orders_for_sign[0]
+
+    def __create_order(self, order: dict):
+        # Convert str representation for uint256 to Python bigint
+        for _t in order['orderToSign']['types'].values():
+            for v in _t:
+                if v['type'] == 'uint256' and v['name'] in order['orderToSign']['message']:
+                    order['orderToSign']['message'][v['name']] = int(order['orderToSign']['message'][v['name']])
+
+        ret = self.__api_orderbook_orders(order_id=order['id'],
+                                          signature=self.__signe_message(order['orderToSign']))
+        return ret.json()
 
     def login(self):
         raise NotImplemented
@@ -137,5 +216,18 @@ class Connector:
         # TODO: Think about return
         return self.__api_wallet_balance_tokens()
 
-    def send_order(self):
-        raise NotImplemented
+    def send_order(self,
+                   action: OrderBookAction,
+                   ticker_hash: str,
+                   currency_hash: str,
+                   price: Decimal,
+                   quantity: int,
+                   expires_at: int):
+        order = self.__prepare_order(action=action,
+                                     ticker_hash=ticker_hash,
+                                     currency_hash=currency_hash,
+                                     price=price,
+                                     quantity=quantity,
+                                     expires_at=expires_at)
+        # TODO: Think about return
+        return self.__create_order(order)
