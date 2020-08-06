@@ -3,3 +3,4 @@
 .~lock*
 .idea/*
 .pytest_cache/
+main.py
