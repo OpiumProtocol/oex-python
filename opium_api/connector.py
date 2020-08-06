@@ -180,18 +180,22 @@ class Connector:
                                       method=HttpMethod.put,
                                       arguments=arguments)
 
-        # if ret.status_code == HTTPStatus.NOT_FOUND:
-        #     return []
+        if ret.status_code == HTTPStatus.UNAUTHORIZED:
+            # TODO: Status: 401 - Unauthorized
+            raise NotImplemented('__api_orderbook_cancel HTTPStatus.UNAUTHORIZED')
+        elif ret.status_code == HTTPStatus.FORBIDDEN:
+            # TODO: Status: 403 - Forbidden
+            raise NotImplemented('__api_orderbook_cancel HTTPStatus.FORBIDDEN')
+        elif ret.status_code == HTTPStatus.NOT_FOUND:
+            # TODO: Status: 404 - Not found
+            pass
+        elif ret.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+            # TODO: Status: 422 - Unprocessable entity
+            raise NotImplemented('__api_orderbook_cancel HTTPStatus.UNPROCESSABLE_ENTITY')
+        elif ret.status_code != HTTPStatus.ACCEPTED:
+            raise NotImplemented(f'__api_orderbook_cancel {ret.status_code}')
 
-        # TODO:
-        #   Status: 201 - Accepted
-        #   Status: 202 -- MISSING
-        #   Status: 401 - Unauthorized
-        #   Status: 403 - Forbidden
-        #   Status: 422 - Unprocessable entity
-        #   Status: 404 - Not found
-
-        return ret.json()
+        return
 
     def __prepare_order(self,
                         action: OrderBookAction,
@@ -255,6 +259,6 @@ class Connector:
         # [{'id': '5f2bb28fc90c490033f39a6f'}]
         return self.__create_orders(order)
 
-    def cancel_order(self, order_id: str):
+    def cancel_order(self, order_ids: List[str]):
         # TODO: Think about return
-        return self.__api_orderbook_cancel(order_ids=[order_id])
+        return self.__api_orderbook_cancel(order_ids=order_ids)
