@@ -50,6 +50,9 @@ class Connector:
         elif method == HttpMethod.post:
             ret = requests.post(url=api_url, headers=headers, params=arguments, json=data)
 
+        elif method == HttpMethod.put:
+            ret = requests.put(url=api_url, headers=headers, params=arguments, json=data)
+
         else:
             raise UnknownHttpMethod
 
@@ -134,7 +137,6 @@ class Connector:
                                       method=HttpMethod.post,
                                       arguments=arguments,
                                       data=data)
-
         # TODO:
         #   Status: 401 - Unauthorized
         #   Status: 403 - Forbidden
@@ -142,7 +144,7 @@ class Connector:
         #   Status: 429 - Too many requests
         return ret.json()
 
-    def __api_orderbook_orders(self, order_id: int, signature: str):
+    def __api_orderbook_orders(self, signed_orders: List[dict]):
         """
         POST /orderbook/orders
         """
@@ -150,18 +152,10 @@ class Connector:
             'authAddress': self.__public_key
         }
 
-        data = [
-            {
-                'id': order_id,
-                'signature': f'0x{signature}'
-            }
-        ]
-
         ret = self.__make_secure_call(endpoint='/orderbook/orders',
                                       method=HttpMethod.post,
                                       arguments=arguments,
-                                      data=data)
-
+                                      data=signed_orders)
         # TODO:
         #   Status: 201 - Created
         #   Status: 401 - Unauthorized
@@ -173,11 +167,31 @@ class Connector:
         #   Status: 429 - Too many requests
         return ret
 
-    def __api_orderbook_cancel(self):
+    def __api_orderbook_cancel(self, order_ids: List[str]):
         """
-        GET /orderbook/cancel
+        PUT /orderbook/cancel
         """
-        raise NotImplemented
+        arguments = {
+            'authAddress': self.__public_key,
+            'ids[]': order_ids
+        }
+
+        ret = self.__make_secure_call(endpoint='/orderbook/cancel',
+                                      method=HttpMethod.put,
+                                      arguments=arguments)
+
+        # if ret.status_code == HTTPStatus.NOT_FOUND:
+        #     return []
+
+        # TODO:
+        #   Status: 201 - Accepted
+        #   Status: 202 -- MISSING
+        #   Status: 401 - Unauthorized
+        #   Status: 403 - Forbidden
+        #   Status: 422 - Unprocessable entity
+        #   Status: 404 - Not found
+
+        return ret.json()
 
     def __prepare_order(self,
                         action: OrderBookAction,
@@ -185,7 +199,7 @@ class Connector:
                         currency_hash: str,
                         price: Decimal,
                         quantity: int,
-                        expires_at: int) -> dict:
+                        expires_at: int) -> List[dict]:
         orders_for_sign: List[dict] = self.__api_orderbook_formorder(action=action,
                                                                      ticker_hash=ticker_hash,
                                                                      currency_hash=currency_hash,
@@ -196,17 +210,25 @@ class Connector:
             # TODO: Ask @Alirun
             raise ValueError
 
-        return orders_for_sign[0]
+        return orders_for_sign
 
-    def __create_order(self, order: dict):
+    def __create_orders(self, orders: List[dict]) -> List[dict]:
+        data = []
+
         # Convert str representation for uint256 to Python bigint
-        for _t in order['orderToSign']['types'].values():
-            for v in _t:
-                if v['type'] == 'uint256' and v['name'] in order['orderToSign']['message']:
-                    order['orderToSign']['message'][v['name']] = int(order['orderToSign']['message'][v['name']])
+        for order in orders:
+            for _t in order['orderToSign']['types'].values():
+                for v in _t:
+                    if v['type'] == 'uint256' and v['name'] in order['orderToSign']['message']:
+                        order['orderToSign']['message'][v['name']] = int(order['orderToSign']['message'][v['name']])
 
-        ret = self.__api_orderbook_orders(order_id=order['id'],
-                                          signature=self.__signe_message(order['orderToSign']))
+            data.append({
+                'id': order['id'],
+                'signature': f'0x{self.__signe_message(order["orderToSign"])}'
+            })
+
+        ret = self.__api_orderbook_orders(signed_orders=data)
+
         return ret.json()
 
     def login(self):
@@ -230,4 +252,9 @@ class Connector:
                                      quantity=quantity,
                                      expires_at=expires_at)
         # TODO: Think about return
-        return self.__create_order(order)
+        # [{'id': '5f2bb28fc90c490033f39a6f'}]
+        return self.__create_orders(order)
+
+    def cancel_order(self, order_id: str):
+        # TODO: Think about return
+        return self.__api_orderbook_cancel(order_ids=[order_id])
