@@ -26,11 +26,11 @@ class Connector:
         self.__private_key: bytes = bytes.fromhex(private_key)
         self.__public_key: str = public_key
 
-    def __signe_message(self, msg: dict) -> str:
+    def __signed_message(self, msg: dict) -> str:
         return v_r_s_to_signature(*sign_typed_data(msg, self.__private_key)).hex()
 
     def __generate_access_token(self):
-        self.__access_token = self.__signe_message(self.__api_auth_logindata())
+        self.__access_token = self.__signed_message(self.__api_auth_logindata())
 
     def __make_public_call(self,
                            endpoint: str,
@@ -228,7 +228,7 @@ class Connector:
 
             data.append({
                 'id': order['id'],
-                'signature': f'0x{self.__signe_message(order["orderToSign"])}'
+                'signature': f'0x{self.__signed_message(order["orderToSign"])}'
             })
 
         ret = self.__api_orderbook_orders(signed_orders=data)
