@@ -1,4 +1,5 @@
 import asyncio
+from json.decoder import JSONDecodeError
 from typing import Dict
 import requests
 import socketio
@@ -84,12 +85,14 @@ class OpiumApi:
     def get_ticker_token(self, ticker_hash: str) -> str:
         return requests.get(f'{self.endpoint}tickers/data/{ticker_hash}').json()[0]['token']
 
-
-    async def get_latest_price(self, ticker: str) -> Dict[str, str]:
+    async def get_as_rest(self, channel: str, ticker: str) -> Dict[str, str]:
         """
+        we use socket_io as rest api here
         @param ticker: ticker in human readable format. example: 'OEX-FUT-1NOV-135.00'
         @return:
         """
+
+        # TODO get_latest_prices(...)
         traded_tickers = self.get_traded_tickers()
 
         try:
@@ -101,20 +104,40 @@ class OpiumApi:
         currency = self.get_ticker_token(ticker_hash)
 
         subscription = {
-            'ch': 'trades:ticker:all',
             't': ticker_hash,
             'c': currency}
 
         s = SocketBase(test_api=True)
         await s.init()
         await s.connect()
-        await s.subscribe('trades:ticker:all', **subscription)
+        await s.subscribe(channel=channel, **subscription)
         await asyncio.sleep(1)
         await s.disconnect()
 
         return s.buffer
 
+    async def get_latest_price(self, ticker: str) -> Dict[str, str]:
+        # TODO move ex handling into get_as_rest(...)
+        try:
+            return await self.get_as_rest('trades:ticker:all', ticker)
+        except JSONDecodeError as ex:
+            print(f"ex: {ex} check if the server works")
+            return {}
+
+    async def get_new_order_book(self, ticker: str):  # -> OrderBook:
+        # TODO move ex handling into get_as_rest(...)
+        try:
+            return await self.get_as_rest('orderbook:orders:ticker', ticker)
+        except JSONDecodeError as ex:
+            print(f"ex: {ex} check if the server works")
+            return {}
+
+    async def listen_for_trades(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
+
+        pass
+
+
 
 if __name__ == '__main__':
-    r = asyncio.run(OpiumApi(test_api=True).get_latest_price('OEX-FUT-1NOV-135.00'))
+    r = asyncio.run(OpiumApi(test_api=True).get_new_order_book('OEX-FUT-1NOV-135.00'))
     print(r)
