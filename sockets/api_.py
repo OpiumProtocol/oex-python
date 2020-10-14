@@ -14,7 +14,7 @@ class SocketBase:
     def __init__(self, test_api=False):
         self.endpoint = (SocketBase.TEST_ENDPOINT if test_api else SocketBase.ENDPOINT) + self.NAMESPACE + '/'
         self._sio: socketio.Client = socketio.AsyncClient(engineio_logger=True, logger=True)
-        self.buffer = None
+        self.queue: asyncio.Queue = asyncio.Queue()
 
     async def init(self):
         await self.register_event('connect', self.connect_handler)
@@ -54,9 +54,12 @@ class SocketBase:
         print(f"data: {data}")
 
     async def handler(self, data):
-        await asyncio.sleep(0)
-        self.buffer = data
-        print(f"data: {data}")
+        await self.queue.put(data)
+
+    async def read_queue_once(self):
+        msg = await self.queue.get()
+        self.queue.task_done()
+        return msg
 
     async def subscribe(self, channel, **kwargs):
         s = {'ch': channel}
@@ -114,7 +117,7 @@ class OpiumApi:
         await asyncio.sleep(1)
         await s.disconnect()
 
-        return s.buffer
+        return await s.read_queue_once()
 
     async def get_latest_price(self, ticker: str) -> Dict[str, str]:
         # TODO move ex handling into get_as_rest(...)
@@ -134,8 +137,32 @@ class OpiumApi:
 
     async def listen_for_trades(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
 
-        pass
+        traded_tickers = self.get_traded_tickers()
 
+        try:
+            ticker_hash = traded_tickers[ticker]
+        except KeyError:
+            print('Ticker is not in traded tickers')
+            return None
+
+        currency = self.get_ticker_token(ticker_hash)
+
+        subscription = {
+            't': ticker_hash,
+            'c': currency}
+
+        s = SocketBase(test_api=True)
+        await s.init()
+        await s.connect()
+        await s.subscribe(channel=channel, **subscription)
+
+
+
+
+        while True:
+            await asyncio.sleep(1)
+
+            output.put_nowait('msg')
 
 
 if __name__ == '__main__':
