@@ -20,6 +20,5 @@ requests==2.24.0
 rlp==1.2.0
 shellescape==3.8.1
 six==1.15.0
-socketio
 urllib3==1.25.10
 web3==5.12.2
