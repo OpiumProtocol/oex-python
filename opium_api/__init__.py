@@ -1,1 +1,1 @@
-from .connector import Connector
+from .client import OpiumClient

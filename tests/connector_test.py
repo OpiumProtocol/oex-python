@@ -1,11 +1,11 @@
 from pprint import pprint
 
 from config import read_config
-from opium_api.connector import Connector
+from opium_api.connector import OpiumClient
 
 
 def get_balance_test():
-    client = Connector(read_config('private_key'), read_config('public_key'))
+    client = OpiumClient(read_config('private_key'), read_config('public_key'))
 
     print(f"balance: {client.get_balance()}")
 

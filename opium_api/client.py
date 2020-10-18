@@ -15,7 +15,7 @@ from opium_api.exceptions import APIException, UnknownHttpMethod
 from opium_api.utils import wei_to_ether
 
 
-class Connector:
+class OpiumClient:
     def __init__(self, private_key: str, public_key: str):
         if not private_key:
             raise ValueError('Empty "private_key"')
