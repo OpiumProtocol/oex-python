@@ -12,6 +12,7 @@ from libs.py_eth_sig_utils.signing import v_r_s_to_signature, sign_typed_data
 from opium_api.enums import HttpMethod, OrderBookAction
 from opium_api.constants import API_VERSION, API_HOST
 from opium_api.exceptions import APIException, UnknownHttpMethod
+from opium_api.utils import wei_to_ether
 
 
 class Connector:
@@ -238,9 +239,18 @@ class Connector:
     def login(self):
         raise NotImplemented
 
-    def get_balance(self):
-        # TODO: Think about return
-        return self.__api_wallet_balance_tokens()
+    def get_balance(self) -> List:
+        r = []
+        for token in self.__api_wallet_balance_tokens():
+            if token['title'] == 'ETH':
+                total = wei_to_ether(int(token['total']))
+            elif token.get('decimals') != 18:
+                raise NotImplementedError(f"wey to {token['decimals']} decimals converter is not implemented")
+            else:
+                total = wei_to_ether(int(token['total']))
+
+            r.append({'token': token['title'], 'total': total})
+        return r
 
     def send_order(self,
                    action: OrderBookAction,
