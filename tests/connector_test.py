@@ -7,7 +7,9 @@ private_key = ...
 
 
 client = Connector(private_key, public_key)
-print(client.get_balance())
+
+
+print(f"balance: {client.get_balance()}")
 
 arguments = {
     'authAddress': public_key,

@@ -1,8 +1,9 @@
 import asyncio
 from json.decoder import JSONDecodeError
-from typing import Dict
+from typing import Dict, List
 import requests
 import socketio
+import datetime as dt
 
 
 class SocketBase:
@@ -135,18 +136,19 @@ class OpiumApi:
             print(f"ex: {ex} check if the server works")
             return {}
 
-    async def listen_for_trades(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
+    async def listen_for_trades(self):
 
         traded_tickers = self.get_traded_tickers()
 
+        trading_pair = 'OEX-FUT-1NOV-135.00'
+
         try:
-            ticker_hash = traded_tickers[ticker]
+            ticker_hash = traded_tickers[trading_pair]
         except KeyError:
             print('Ticker is not in traded tickers')
             return None
 
         currency = self.get_ticker_token(ticker_hash)
-
         subscription = {
             't': ticker_hash,
             'c': currency}
@@ -154,17 +156,81 @@ class OpiumApi:
         s = SocketBase(test_api=True)
         await s.init()
         await s.connect()
-        await s.subscribe(channel=channel, **subscription)
+        await s.subscribe(channel='trades:ticker:all', **subscription)
 
+        queue = s.queue
 
+        delta: int = int(dt.timedelta(days=-5).total_seconds())
+
+        last_ts: int = int(dt.datetime.now().timestamp()) - delta
+
+        last_trade_tx: str = ''
+        init = True
+        # TODO: add queue
+
+        while True:
+            msg = await queue.get()
+            print(f"msg: {msg}")
+            trades: List = msg['d']
+
+            if init:
+                init = False
+                t = trades[-1]
+                last_trade_tx = t['tx']
+
+            found_last_tx = False
+            for t in reversed(trades):
+                tx = t['tx']
+
+                if found_last_tx:
+                    # new trades
+                    last_trade_tx = tx
+                    trade = {
+                        'trading_pair': trading_pair,
+                        'trade_type': 'na',
+                        'trade_id': tx,
+                        'update_id': t['ts'],
+                        'price': t['p'],
+                        'amount': t['q'],
+                        'timestamp': t['ts']
+
+                    }
+                    # TODO: add to queue
+                    print(f"r: {trade}")
+
+                if last_trade_tx == tx and found_last_tx is False:
+                    print(f"found_last_tx: {found_last_tx}")
+                    found_last_tx = True
+
+    async def listen_for_order_book_diffs(self):
+        traded_tickers = self.get_traded_tickers()
+
+        trading_pair = 'OEX-FUT-1DEC-135.00'
+
+        try:
+            ticker_hash = traded_tickers[trading_pair]
+        except KeyError:
+            print('Ticker is not in traded tickers')
+            return None
+
+        currency = self.get_ticker_token(ticker_hash)
+        subscription = {
+            't': ticker_hash,
+            'c': currency}
+
+        s = SocketBase(test_api=True)
+        await s.init()
+        await s.connect()
+        await s.subscribe(channel='orderbook:orders:ticker', **subscription)
+
+        queue = s.queue
 
 
         while True:
-            await asyncio.sleep(1)
-
-            output.put_nowait('msg')
+            msg = await queue.get()
+            print(f"msg: {msg}")
 
 
 if __name__ == '__main__':
-    r = asyncio.run(OpiumApi(test_api=True).get_new_order_book('OEX-FUT-1NOV-135.00'))
+    r = asyncio.run(OpiumApi(test_api=True).listen_for_order_book_diffs())
     print(r)
