@@ -1,6 +1,6 @@
 from decimal import Decimal, getcontext
 from http import HTTPStatus
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 
 import requests
 
@@ -239,7 +239,7 @@ class OpiumClient:
     def login(self):
         raise NotImplemented
 
-    def get_balance(self) -> List:
+    def get_balance(self) -> Dict:
         r = []
         for token in self.__api_wallet_balance_tokens():
             if token['title'] == 'ETH':
@@ -249,8 +249,8 @@ class OpiumClient:
             else:
                 total = wei_to_ether(int(token['total']))
 
-            r.append({'token': token['title'], 'total': total})
-        return r
+            r.append({'asset': token['title'], 'free': total})
+        return {'balances': r}
 
     def send_order(self,
                    action: OrderBookAction,
