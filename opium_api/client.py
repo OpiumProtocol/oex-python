@@ -16,7 +16,7 @@ from opium_api.utils import wei_to_ether
 
 
 class OpiumClient:
-    def __init__(self, private_key: str, public_key: str):
+    def __init__(self, public_key: str, private_key: str):
         if not private_key:
             raise ValueError('Empty "private_key"')
         if not public_key:
