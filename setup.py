@@ -31,7 +31,6 @@ setup(
         'rlp==1.2.0',
         'shellescape==3.8.1',
         'six==1.15.0',
-        'socketio==4.6.0',
         'urllib3==1.25.10',
         'web3==5.12.2'
     ],
