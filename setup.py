@@ -18,7 +18,7 @@ setup(
         'eth-abi==2.1.1',
         'eth-hash==0.2.0',
         'eth-typing==2.2.1',
-        'eth-utils==1.9.0',
+        'eth-utils==1.9.5',
         'idna==2.10',
         'mypy-extensions==0.4.3',
         'Naked==0.1.31',
@@ -31,7 +31,7 @@ setup(
         'rlp==1.2.0',
         'shellescape==3.8.1',
         'six==1.15.0',
-        'socketio',
+        'socketio==4.6.0',
         'urllib3==1.25.10',
         'web3==5.12.2'
     ],
