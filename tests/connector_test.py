@@ -31,7 +31,7 @@ def limit_buy_sell_test():
     order = client.send_order(action=OrderBookAction.bid,
                               ticker_hash=test_ticker_hash,
                               currency_hash=currency_hash,
-                              price=Decimal('2.36'), quantity=10,
+                              price=Decimal('2.37'), quantity=10,
                               expires_at=9999999999)
     print(f"order: {order}")
     #

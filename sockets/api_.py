@@ -230,7 +230,31 @@ class OpiumApi:
             msg = await queue.get()
             print(f"msg: {msg}")
 
+    async def listen_for_orders(self, maker_addr: str, sig: str):
+        traded_tickers = self.get_traded_tickers()
 
-if __name__ == '__main__':
-    r = asyncio.run(OpiumApi(test_api=True).listen_for_order_book_diffs())
-    print(r)
+        trading_pair = 'OEX-FUT-1DEC-135.00'
+
+        try:
+            ticker_hash = traded_tickers[trading_pair]
+        except KeyError:
+            print('Ticker is not in traded tickers')
+            return None
+
+        currency = self.get_ticker_token(ticker_hash)
+        subscription = {
+            't': ticker_hash,
+            'c': currency,
+            'addr': maker_addr,
+            'sig': sig}
+
+        s = SocketBase(test_api=True)
+        await s.init()
+        await s.connect()
+        await s.subscribe(channel='orderbook:orders:makerAddress', **subscription)
+
+        queue = s.queue
+
+        while True:
+            msg = await queue.get()
+            print(f"msg: {msg}")

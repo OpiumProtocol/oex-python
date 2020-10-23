@@ -30,8 +30,9 @@ class OpiumClient:
     def __signe_message(self, msg: dict) -> str:
         return v_r_s_to_signature(*sign_typed_data(msg, self.__private_key)).hex()
 
-    def __generate_access_token(self):
+    def generate_access_token(self):
         self.__access_token = self.__signe_message(self.__api_auth_logindata())
+        return self.__access_token
 
     def __make_public_call(self,
                            endpoint: str,
@@ -65,7 +66,7 @@ class OpiumClient:
                            arguments: Optional[dict] = None,
                            data: Union[Optional[dict], Optional[list]] = None) -> Response:
         if not self.__access_token:
-            self.__generate_access_token()
+            self.generate_access_token()
 
         headers = {
             'Authorization': f'Bearer 0x{self.__access_token}'
