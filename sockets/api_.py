@@ -255,6 +255,11 @@ class OpiumApi:
 
         queue = s.queue
 
+        current_msg = None
+
         while True:
             msg = await queue.get()
             print(f"msg: {msg}")
+            current_msg = msg.get('d')
+
+            print(f"current_msg: {current_msg}")

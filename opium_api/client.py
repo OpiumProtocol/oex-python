@@ -22,10 +22,14 @@ class OpiumClient:
         if not public_key:
             raise ValueError('Empty "public_key"')
 
+
         self.__api_url: str = f'https://{API_HOST}/{API_VERSION}'
         self.__access_token: str = ''
         self.__private_key: bytes = bytes.fromhex(private_key)
         self.__public_key: str = public_key
+
+    def get_public_key(self):
+        return self.__public_key
 
     def __signe_message(self, msg: dict) -> str:
         return v_r_s_to_signature(*sign_typed_data(msg, self.__private_key)).hex()
