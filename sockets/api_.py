@@ -230,10 +230,13 @@ class OpiumApi:
             msg = await queue.get()
             print(f"msg: {msg}")
 
-    async def listen_for_orders(self, maker_addr: str, sig: str):
+    async def listen_for_orders(self, trading_pair: str, maker_addr: str, sig: str, output: asyncio.Queue):
+        """
+        trading_pair = 'OEX-FUT-1DEC-135.00'
+        """
+
         traded_tickers = self.get_traded_tickers()
 
-        trading_pair = 'OEX-FUT-1DEC-135.00'
 
         try:
             ticker_hash = traded_tickers[trading_pair]
@@ -259,6 +262,9 @@ class OpiumApi:
 
         while True:
             msg = await queue.get()
+            await output.put(msg)
+            queue.task_done()
+
             print(f"msg: {msg}")
             current_msg = msg.get('d')
 
