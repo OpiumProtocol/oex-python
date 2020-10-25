@@ -78,6 +78,11 @@ class OpiumApi:
 
     def __init__(self, test_api=False):
         self.endpoint = (OpiumApi.TEST_ENDPOINT if test_api else OpiumApi.ENDPOINT) + self.NAMESPACE
+        self._last_recv_time: float = 0
+
+    def get_last_message_time(self):
+        return self._last_recv_time
+
 
     def get_traded_tickers(self) -> Dict[str, str]:
         """
@@ -262,6 +267,7 @@ class OpiumApi:
 
         while True:
             msg = await queue.get()
+            self._last_recv_time = dt.time()
             await output.put(msg)
             queue.task_done()
 
