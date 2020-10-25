@@ -2,8 +2,10 @@ import asyncio
 from json.decoder import JSONDecodeError
 from typing import Dict, List
 import requests
-import socketio
 import datetime as dt
+
+from socketio.asyncio_client import AsyncClient
+from socketio.client import Client
 
 
 class SocketBase:
@@ -14,7 +16,7 @@ class SocketBase:
 
     def __init__(self, test_api=False):
         self.endpoint = (SocketBase.TEST_ENDPOINT if test_api else SocketBase.ENDPOINT) + self.NAMESPACE + '/'
-        self._sio: socketio.Client = socketio.AsyncClient(engineio_logger=True, logger=True)
+        self._sio: Client = AsyncClient(engineio_logger=True, logger=True)
         self.queue: asyncio.Queue = asyncio.Queue()
 
     async def init(self):
