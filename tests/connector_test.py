@@ -4,7 +4,7 @@ from pprint import pprint
 from config import read_config
 from opium_api import OpiumClient
 from opium_api.enums import OrderBookAction
-from sockets import OpiumApi
+from opium_sockets import OpiumApi
 
 api = OpiumApi(test_api=True)
 

@@ -1,7 +1,7 @@
 import asyncio
 
 from config import read_config
-from sockets import OpiumApi
+from opium_sockets import OpiumApi
 from opium_api import OpiumClient
 
 
