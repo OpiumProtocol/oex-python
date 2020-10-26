@@ -15,7 +15,7 @@ class SocketBase:
 
     def __init__(self, test_api=False):
         self.endpoint = (SocketBase.TEST_ENDPOINT if test_api else SocketBase.ENDPOINT) + self.NAMESPACE + '/'
-        self._sio  = AsyncClient(engineio_logger=True, logger=True)
+        self._sio = AsyncClient(engineio_logger=True, logger=True)
         self.queue: asyncio.Queue = asyncio.Queue()
 
     async def init(self):
@@ -84,7 +84,6 @@ class OpiumApi:
     def get_last_message_time(self):
         return self._last_recv_time
 
-
     def get_traded_tickers(self) -> Dict[str, str]:
         """
         Get not expired tickers
@@ -134,10 +133,33 @@ class OpiumApi:
             print(f"ex: {ex} check if the server works")
             return {}
 
+    @staticmethod
+    def response_to_order_book(r):
+        bids = []
+        asks = []
+
+        order_book = r.get('d')
+        if order_book is not None:
+            for order in order_book:
+                if order['a'] == 'BID':
+                    bids.append([order['p'], order['v']])
+                else:
+                    asks.append([order['p'], order['v']])
+
+        return {'lastUpdateId': int(dt.datetime.now().timestamp()),
+                'bids': bids,
+                'asks': asks}
+
     async def get_new_order_book(self, ticker: str):  # -> OrderBook:
+        """
+        returns:
+        {'lastUpdateId': 1603730733,
+        'bids': [[12.36, 1], [2.35, 10], [2.33, 2], [2.31, 1], [1.9, 3], [1.09, 4], [0.88, 1], [0.76, 5], [0.46, 3]...
+        'asks': [[20.09, 3], [20.27, 1], [20.43, 5], [20.49, 5], [21.58, 2], [22.004, 1], [22.047, 1]...
+        """
         # TODO move ex handling into get_as_rest(...)
         try:
-            return await self.get_as_rest('orderbook:orders:ticker', ticker)
+            return self.response_to_order_book(await self.get_as_rest('orderbook:orders:ticker', ticker))
         except JSONDecodeError as ex:
             print(f"ex: {ex} check if the server works")
             return {}
@@ -231,7 +253,6 @@ class OpiumApi:
 
         queue = s.queue
 
-
         while True:
             msg = await queue.get()
             print(f"msg: {msg}")
@@ -242,7 +263,6 @@ class OpiumApi:
         """
 
         traded_tickers = self.get_traded_tickers()
-
 
         try:
             ticker_hash = traded_tickers[trading_pair]
