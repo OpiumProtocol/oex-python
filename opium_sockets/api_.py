@@ -232,7 +232,7 @@ class OpiumApi:
                     trade = {
                         'trading_pair': trading_pair,
                         'trade_type': 'na',
-                        'trade_id': tx,
+                        'exchange_order_id': tx,
                         'update_id': ts,
                         'price': t['p'],
                         'amount': t['q'],
