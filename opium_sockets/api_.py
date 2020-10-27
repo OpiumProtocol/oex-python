@@ -172,7 +172,7 @@ class OpiumApi:
         return int(dt.datetime.now().timestamp())
 
 
-    async def listen_for_trades(self, trading_pair: str, output: asyncio.Queue = None):
+    async def listen_for_trades(self, trading_pair: str):
         """
         Convert a trade data into standard OrderBookMessage:
             "exchange_order_id": msg.get("d"),
@@ -188,7 +188,7 @@ class OpiumApi:
             ticker_hash = traded_tickers[trading_pair]
         except KeyError:
             print('Ticker is not in traded tickers')
-            return None
+            return
 
         currency = self.get_ticker_token(ticker_hash)
         subscription = {
@@ -239,9 +239,7 @@ class OpiumApi:
                         'timestamp': ts
 
                     }
-                    if output is not None:
-                        await output.put(msg)
-                    print(f"r: {trade}")
+                    yield trade
 
                 if last_trade_tx == tx and found_last_tx is False:
                     print(f"found_last_tx: {found_last_tx}")

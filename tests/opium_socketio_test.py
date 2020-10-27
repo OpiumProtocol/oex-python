@@ -34,13 +34,21 @@ def test_get_latest_price():
 
 
 def test_listen_for_trades():
-    client = OpiumClient(read_config('public_key'), read_config('private_key'))
 
 
-    token = '0x' + client.generate_access_token()
-    print(f"token: {token}")
-    trading_pair = 'OEX-FUT-1DEC-135.00'
-    r = asyncio.run(OpiumApi(test_api=True).listen_for_trades(trading_pair=trading_pair))
+    async def run():
+        client = OpiumClient(read_config('public_key'), read_config('private_key'))
+
+
+        token = '0x' + client.generate_access_token()
+        print(f"token: {token}")
+        trading_pair = 'OEX-FUT-1DEC-135.00'
+
+        g = OpiumApi(test_api=True).listen_for_trades(trading_pair=trading_pair)
+
+        async for trade in g:
+            print(f"trade: {trade}")
+    r = asyncio.run(run())
     print(r)
 
 
