@@ -167,11 +167,22 @@ class OpiumApi:
             print(f"ex: {ex} check if the server works")
             return {}
 
-    async def listen_for_trades(self):
+    @staticmethod
+    def get_timestamp() -> int:
+        return int(dt.datetime.now().timestamp())
+
+
+    async def listen_for_trades(self, trading_pair: str, output: asyncio.Queue = None):
+        """
+        Convert a trade data into standard OrderBookMessage:
+            "exchange_order_id": msg.get("d"),
+            "trade_type": msg.get("s"),
+            "price": msg.get("p"),
+            "amount": msg.get("q")
+
+        """
 
         traded_tickers = self.get_traded_tickers()
-
-        trading_pair = 'OEX-FUT-1NOV-135.00'
 
         try:
             ticker_hash = traded_tickers[trading_pair]
@@ -193,7 +204,7 @@ class OpiumApi:
 
         delta: int = int(dt.timedelta(days=-5).total_seconds())
 
-        last_ts: int = int(dt.datetime.now().timestamp()) - delta
+        last_ts: int = self.get_timestamp() - delta
 
         last_trade_tx: str = ''
         init = True
@@ -201,6 +212,7 @@ class OpiumApi:
 
         while True:
             msg = await queue.get()
+
             print(f"msg: {msg}")
             trades: List = msg['d']
 
@@ -215,18 +227,20 @@ class OpiumApi:
 
                 if found_last_tx:
                     # new trades
+                    ts = self.get_timestamp()
                     last_trade_tx = tx
                     trade = {
                         'trading_pair': trading_pair,
                         'trade_type': 'na',
                         'trade_id': tx,
-                        'update_id': t['ts'],
+                        'update_id': ts,
                         'price': t['p'],
                         'amount': t['q'],
-                        'timestamp': t['ts']
+                        'timestamp': ts
 
                     }
-                    # TODO: add to queue
+                    if output is not None:
+                        await output.put(msg)
                     print(f"r: {trade}")
 
                 if last_trade_tx == tx and found_last_tx is False:
