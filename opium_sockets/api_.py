@@ -245,16 +245,14 @@ class OpiumApi:
                     print(f"found_last_tx: {found_last_tx}")
                     found_last_tx = True
 
-    async def listen_for_order_book_diffs(self):
+    async def listen_for_order_book_diffs(self, trading_pair: str):
         traded_tickers = self.get_traded_tickers()
-
-        trading_pair = 'OEX-FUT-1DEC-135.00'
 
         try:
             ticker_hash = traded_tickers[trading_pair]
         except KeyError:
             print('Ticker is not in traded tickers')
-            return None
+            return
 
         currency = self.get_ticker_token(ticker_hash)
         subscription = {
@@ -267,10 +265,8 @@ class OpiumApi:
         await s.subscribe(channel='orderbook:orders:ticker', **subscription)
 
         queue = s.queue
-
         while True:
-            msg = await queue.get()
-            print(f"msg: {msg}")
+            yield self.response_to_order_book(await queue.get())
 
     async def listen_for_orders(self, trading_pair: str, maker_addr: str, sig: str, output: asyncio.Queue):
         """
