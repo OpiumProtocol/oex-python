@@ -3,7 +3,7 @@ from json.decoder import JSONDecodeError
 from typing import Dict, List, Any
 import requests
 import datetime as dt
-
+import logging
 from socketio import AsyncClient
 
 
@@ -295,15 +295,15 @@ class OpiumApi:
 
         queue = s.queue
 
-        current_msg = None
+        orders = None
 
         while True:
             msg = await queue.get()
-            self._last_recv_time = dt.time()
-            await output.put(msg)
+            orders = msg.get('d')
+
+            self._last_recv_time = dt.datetime.now().timestamp()
+
+            print(f"orders: {orders}")
+            if output is not None:
+                await output.put(orders)
             queue.task_done()
-
-            print(f"msg: {msg}")
-            current_msg = msg.get('d')
-
-            print(f"current_msg: {current_msg}")

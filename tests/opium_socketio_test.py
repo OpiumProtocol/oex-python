@@ -15,7 +15,7 @@ def test_listen_for_orders():
     r = asyncio.run(OpiumApi(test_api=True).listen_for_orders(trading_pair=trading_pair,
                                                               maker_addr=read_config('public_key'),
                                                               sig=token,
-                                                              output=NotImplemented))
+                                                              output=None))
     print(r)
 
 
@@ -61,4 +61,4 @@ def test_listen_for_order_book_diffs():
 
 
 if __name__ == '__main__':
-    test_listen_for_order_book_diffs()
+    test_listen_for_orders()
