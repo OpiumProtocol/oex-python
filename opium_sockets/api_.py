@@ -66,7 +66,6 @@ class SocketBase:
     async def subscribe(self, channel, **kwargs):
         s = {'ch': channel}
         s.update(kwargs)
-        print(f"s: {s}")
         await self.register_event(channel)
         await self.emit('subscribe', s)
 
@@ -121,6 +120,7 @@ class OpiumApi:
         await s.connect()
         await s.subscribe(channel=channel, **subscription)
         await asyncio.sleep(1)
+
         await s.disconnect()
 
         return await s.read_queue_once()
