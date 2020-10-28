@@ -10,3 +10,8 @@ class HttpMethod(IntEnum):
 class OrderBookAction(Enum):
     ask = 'ASK'
     bid = 'BID'
+
+
+class TradeType(Enum):
+    BUY = 1
+    SELL = 2

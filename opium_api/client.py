@@ -27,9 +27,21 @@ class OpiumClient:
         self.__access_token: str = ''
         self.__private_key: bytes = bytes.fromhex(private_key)
         self.__public_key: str = public_key
+        self.__traded_tickers: Dict[str, str] = self.get_traded_tickers()
 
     def get_public_key(self):
         return self.__public_key
+
+    def get_traded_tickers(self) -> Dict[str, str]:
+        """
+        Get not expired tickers
+        """
+        r = requests.get(f'{self.__api_url}/tickers?expired=false')
+        return {ticker['productTitle']: ticker['hash'] for ticker in r.json()}
+
+    def get_ticker_token(self, ticker_hash: str) -> str:
+        return requests.get(f'{self.__api_url}/tickers/data/{ticker_hash}').json()[0]['token']
+
 
     def __signe_message(self, msg: dict) -> str:
         return v_r_s_to_signature(*sign_typed_data(msg, self.__private_key)).hex()
@@ -257,13 +269,21 @@ class OpiumClient:
             r.append({'asset': token['title'], 'free': total})
         return {'balances': r}
 
-    def send_order(self,
-                   action: OrderBookAction,
-                   ticker_hash: str,
-                   currency_hash: str,
-                   price: Decimal,
-                   quantity: int,
-                   expires_at: int):
+    def create_order(self, instrument_name, side, price, quantity):
+        action = OrderBookAction.bid if side == 'BUY' else OrderBookAction.ask
+
+        ticker_hash = self.__traded_tickers[instrument_name]
+        currency_hash = self.get_ticker_token(ticker_hash)
+        return self._send_order(action, ticker_hash, currency_hash, price, quantity, expires_at=9999999999)
+
+
+    def _send_order(self,
+                    action: OrderBookAction,
+                    ticker_hash: str,
+                    currency_hash: str,
+                    price: Decimal,
+                    quantity: int,
+                    expires_at: int):
         order = self.__prepare_order(action=action,
                                      ticker_hash=ticker_hash,
                                      currency_hash=currency_hash,

@@ -84,6 +84,8 @@ class OpiumApi:
         return self._last_recv_time
 
     def get_traded_tickers(self) -> Dict[str, str]:
+
+        # TODO: move this method into Opium Client
         """
         Get not expired tickers
         """
