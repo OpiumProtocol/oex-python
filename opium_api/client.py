@@ -269,13 +269,14 @@ class OpiumClient:
             r.append({'asset': token['title'], 'free': total})
         return {'balances': r}
 
-    def create_order(self, instrument_name, side, price, quantity):
+    def create_order(self, instrument_name: str, side: str, price, quantity: str):
         action = OrderBookAction.bid if side == 'BUY' else OrderBookAction.ask
 
         ticker_hash = self.__traded_tickers[instrument_name]
         currency_hash = self.get_ticker_token(ticker_hash)
-        return self._send_order(action, ticker_hash, currency_hash, price, quantity, expires_at=9999999999)
-
+        # TODO: quantity is int here
+        return self._send_order(action, ticker_hash, currency_hash, price, int(Decimal(quantity)),
+                                expires_at=9999999999)
 
     def _send_order(self,
                     action: OrderBookAction,
