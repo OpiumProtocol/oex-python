@@ -42,7 +42,6 @@ class OpiumClient:
     def get_ticker_token(self, ticker_hash: str) -> str:
         return requests.get(f'{self.__api_url}/tickers/data/{ticker_hash}').json()[0]['token']
 
-
     def __signe_message(self, msg: dict) -> str:
         return v_r_s_to_signature(*sign_typed_data(msg, self.__private_key)).hex()
 
@@ -213,7 +212,7 @@ class OpiumClient:
         elif ret.status_code != HTTPStatus.ACCEPTED:
             raise NotImplemented(f'__api_orderbook_cancel {ret.status_code}')
 
-        return
+        return {'code': 0}
 
     def __prepare_order(self,
                         action: OrderBookAction,

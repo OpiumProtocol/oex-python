@@ -14,8 +14,7 @@ def test_listen_for_orders():
     trading_pair = 'OEX-FUT-1DEC-135.00'
     r = asyncio.run(OpiumApi(test_api=True).listen_for_orders(trading_pair=trading_pair,
                                                               maker_addr=read_config('public_key'),
-                                                              sig=token,
-                                                              output=None))
+                                                              sig=token))
     print(r)
 
 
