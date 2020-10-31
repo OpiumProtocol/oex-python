@@ -116,4 +116,4 @@ class SocketIOTest:
 
 
 if __name__ == '__main__':
-    SocketIOTest.test_listen_for_order_book_diffs()
+    SocketIOTest.test_listen_for_trades()

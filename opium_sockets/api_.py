@@ -202,7 +202,7 @@ class OpiumApi:
                 ts: int = trades[0]['create_time']
             yield trades
 
-    async def listen_for_trades(self, trading_pair: str, new_only=False):
+    async def listen_for_trades(self, trading_pair: str, new_only=True):
         """
         Listen for trades
         """
