@@ -3,11 +3,15 @@
 try:
     from Crypto.Hash import keccak
 
-    def sha3_256(x): return keccak.new(digest_bits=256, data=x).digest()
+
+    def sha3_256(x):
+        return keccak.new(digest_bits=256, data=x).digest()
 except ImportError:
     import sha3 as _sha3
 
-    def sha3_256(x): return _sha3.keccak_256(x).digest()
+
+    def sha3_256(x):
+        return _sha3.keccak_256(x).digest()
 from py_ecc.secp256k1 import privtopub, ecdsa_raw_sign, ecdsa_raw_recover
 import sys
 import rlp
@@ -21,26 +25,33 @@ try:
     import coincurve
 except ImportError:
     import warnings
+
     warnings.warn('could not import coincurve', ImportWarning)
     coincurve = None
+
 
 class Memoize:
     def __init__(self, fn):
         self.fn = fn
         self.memo = {}
+
     def __call__(self, *args):
         if args not in self.memo:
             self.memo[args] = self.fn(*args)
         return self.memo[args]
 
+
 TT256 = 2 ** 256
 TT256M1 = 2 ** 256 - 1
 TT255 = 2 ** 255
-SECP256K1P = 2**256 - 4294968273
+SECP256K1P = 2 ** 256 - 4294968273
+
 
 def is_numeric(x): return isinstance(x, int)
 
+
 def is_string(x): return isinstance(x, bytes)
+
 
 def to_string(value):
     if isinstance(value, bytes):
@@ -50,23 +61,31 @@ def to_string(value):
     if isinstance(value, int):
         return bytes(str(value), 'utf-8')
 
+
 def int_to_bytes(value):
     if isinstance(value, bytes):
         return value
     return int_to_big_endian(value)
 
+
 def to_string_for_regexp(value):
     return str(to_string(value), 'utf-8')
+
+
 unicode = str
+
 
 def bytearray_to_bytestr(value):
     return bytes(value)
 
+
 def encode_int32(v):
     return v.to_bytes(32, byteorder='big')
 
+
 def bytes_to_int(value):
     return int.from_bytes(value, byteorder='big')
+
 
 def str_to_bytes(value):
     if isinstance(value, bytearray):
@@ -75,19 +94,23 @@ def str_to_bytes(value):
         return value
     return bytes(value, 'utf-8')
 
+
 def ascii_chr(n):
     return ALL_BYTES[n]
+
 
 def encode_hex(n):
     if isinstance(n, str):
         return encode_hex(n.encode('ascii'))
     return encode_hex_0x(n)[2:]
 
+
 def ecrecover_to_pub(rawhash, v, r, s):
     if coincurve and hasattr(coincurve, "PublicKey"):
         try:
             pk = coincurve.PublicKey.from_signature_and_message(
-                zpad(bytearray_to_bytestr(int_to_32bytearray(r)), 32) + zpad(bytearray_to_bytestr(int_to_32bytearray(s)), 32) +
+                zpad(bytearray_to_bytestr(int_to_32bytearray(r)), 32) + zpad(
+                    bytearray_to_bytestr(int_to_32bytearray(s)), 32) +
                 ascii_chr(v - 27),
                 rawhash,
                 hasher=None,
@@ -132,6 +155,7 @@ def safe_ord(value):
     else:
         return ord(value)
 
+
 # decorator
 
 
@@ -143,7 +167,9 @@ def debug(label):
             x = f(*args, **kwargs)
             print(label, i, 'end', x)
             return x
+
         return inner
+
     return deb
 
 
@@ -167,6 +193,7 @@ def int_to_32bytearray(i):
         o[31 - x] = i & 0xff
         i >>= 8
     return o
+
 
 # sha3_count = [0]
 
@@ -194,7 +221,7 @@ def checksum_encode(addr):  # Takes a 20-byte binary address as input
         if c in '0123456789':
             o += c
         else:
-            o += c.upper() if (v & (2**(255 - 4 * i))) else c.lower()
+            o += c.upper() if (v & (2 ** (255 - 4 * i))) else c.lower()
     return '0x' + o
 
 
@@ -496,7 +523,9 @@ def print_func_call(ignore_first_arg=False, max_call_number=100):
             if local['call_number'] > 100:
                 raise Exception("Touch max call number!")
             return res
+
         return wrapper
+
     return inner
 
 
@@ -526,7 +555,6 @@ class Denoms():
 
 
 denoms = Denoms()
-
 
 address = Binary.fixed_length(20, allow_empty=True)
 int20 = BigEndianInt(20)
