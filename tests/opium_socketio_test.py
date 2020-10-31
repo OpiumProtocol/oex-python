@@ -45,16 +45,6 @@ def test_listen_for_trades():
     print(r)
 
 
-def test_listen_for_order_book_diffs():
-    async def run():
-        trading_pair = 'OEX-FUT-1DEC-135.00'
-        api = OpiumApi(test_api=True).listen_for_order_book_diffs(trading_pair=trading_pair)
-
-        async for ob_update in api:
-            print(f"ob_update: {ob_update}")
-
-    r = asyncio.run(run())
-    print(r)
 
 
 def test_get_order_status():
@@ -113,9 +103,17 @@ class SocketIOTest:
         r = asyncio.run(run())
         print(r)
 
+    @classmethod
+    def test_listen_for_order_book_diffs(cls):
+        async def run():
+            api = OpiumApi(test_api=True).listen_for_order_book_diffs(trading_pair=cls.trading_pair)
 
+            async for ob_update in api:
+                print(f"ob_update: {ob_update}")
 
+        r = asyncio.run(run())
+        print(r)
 
 
 if __name__ == '__main__':
-    SocketIOTest.test_listen_for_trades()
+    SocketIOTest.test_listen_for_order_book_diffs()

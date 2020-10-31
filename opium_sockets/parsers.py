@@ -1,15 +1,14 @@
 import datetime as dt
-from typing import Dict, Any
-
+from typing import Dict, Any, List
 
 
 class Parser:
     @staticmethod
-    def parse_order_book(r: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_order_book(order_book: List[Dict[str, Any]]) -> Dict[str, Any]:
+
         bids = []
         asks = []
 
-        order_book = r.get('d')
         if order_book is not None:
             for order in order_book:
                 if order['a'] == 'BID':
