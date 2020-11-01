@@ -202,6 +202,17 @@ class OpiumApi:
                 ts: int = trades[0]['create_time']
             yield trades
 
+    def parse_trade(self, t, trading_pair):
+        return {
+            'trading_pair': trading_pair,
+            'trade_type': 'BUY' if t['a'] == 'ASK' else 'SELL',
+            'exchange_order_id': t['tx'],
+            'update_id': self.get_timestamp(),
+            'price': t['p'],
+            'amount': t['q'],
+            'timestamp': self.get_timestamp()
+        }
+
     async def listen_for_trades(self, trading_pair: str, new_only=True):
         """
         Listen for trades
@@ -210,11 +221,13 @@ class OpiumApi:
 
         ts: int = int(dt.datetime.now().timestamp()) if new_only else 0
 
+
+
         async for trades in self.listen_for('trades:ticker:all',
                                             {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash)}):
-            trades = [Parser.parse_account_trade(t, trading_pair) for t in trades if t['t'] >= ts]
+            trades = [self.parse_trade(t, trading_pair) for t in trades if t['t'] >= ts]
             if trades and new_only:
-                ts: int = trades[0]['create_time']
+                ts: int = trades[0]['timestamp']
             yield trades
 
     async def listen_for_order_book_diffs(self, trading_pair: str):
@@ -252,56 +265,56 @@ class OpiumApi:
         """
         async for ob in self.listen_for_order_book_diffs(trading_pair=trading_pair):
             await self.close()
-            return Parser.parse_order_book(ob)
+            return ob
 
 
 def temp():
-    pass
-    # async def listen_for_trades(self, trading_pair: str):
-    #     """
-    #     Convert a trade data into standard OrderBookMessage:
-    #         "exchange_order_id": msg.get("d"),
-    #         "trade_type": msg.get("s"),
-    #         "price": msg.get("p"),
-    #         "amount": msg.get("q")
-    #
-    #     """
-    #
-    #     ticker_hash = self._get_ticker_hash(trading_pair)
-    #
-    #     delta: int = int(dt.timedelta(days=-5).total_seconds())
-    #
-    #     last_ts: int = self.get_timestamp() - delta
-    #
-    #     last_trade_tx: str = ''
-    #     init = True
-    #     # TODO: add queue
-    #
-    #     async for trades in self.listen_for('trades:ticker:all', {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash)}):
-    #
-    #         if init:
-    #             init = False
-    #             t = trades[-1]
-    #             last_trade_tx = t['tx']
-    #
-    #         found_last_tx = False
-    #         for t in reversed(trades):
-    #             tx = t['tx']
-    #
-    #             if found_last_tx:
-    #                 # new trades
-    #                 ts = self.get_timestamp()
-    #                 last_trade_tx = tx
-    #                 trade = {
-    #                     'trading_pair': trading_pair,
-    #                     'trade_type': 'na',
-    #                     'exchange_order_id': tx,
-    #                     'update_id': ts,
-    #                     'price': t['p'],
-    #                     'amount': t['q'],
-    #                     'timestamp': ts
-    #                 }
-    #                 yield trade
-    #
-    #             if last_trade_tx == tx and found_last_tx is False:
-    #                 found_last_tx = True
+    async def listen_for_trades(self, trading_pair: str):
+        """
+        Convert a trade data into standard OrderBookMessage:
+            "exchange_order_id": msg.get("d"),
+            "trade_type": msg.get("s"),
+            "price": msg.get("p"),
+            "amount": msg.get("q")
+
+        """
+
+        ticker_hash = self._get_ticker_hash(trading_pair)
+
+        delta: int = int(dt.timedelta(days=-5).total_seconds())
+
+        last_ts: int = self.get_timestamp() - delta
+
+        last_trade_tx: str = ''
+        init = True
+        # TODO: add queue
+
+        async for trades in self.listen_for('trades:ticker:all', {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash)}):
+
+            if init:
+                init = False
+                t = trades[-1]
+                last_trade_tx = t['tx']
+
+            found_last_tx = False
+            for t in reversed(trades):
+                tx = t['tx']
+
+                if found_last_tx:
+                    # new trades
+                    ts = self.get_timestamp()
+                    last_trade_tx = tx
+                    trade = {
+                        'trading_pair': trading_pair,
+                        'trade_type': 'na',
+                        'exchange_order_id': t['tx'],
+                        'update_id': self.get_timestamp(),
+                        'price': t['p'],
+                        'amount': t['q'],
+                        'timestamp': self.get_timestamp()
+                    }
+                    yield trade
+
+                if last_trade_tx == tx and found_last_tx is False:
+                    found_last_tx = True
+#
