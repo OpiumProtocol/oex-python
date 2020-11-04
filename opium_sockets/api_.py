@@ -277,7 +277,7 @@ class OpiumApi:
 
         async for trades in self.listen_for(['trades:ticker:all'],
                                             {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash)}):
-            trades = [self.parse_trade(t, trading_pair) for t in trades if t['t'] >= ts]
+            trades = [self.parse_trade(t, trading_pair) for t in trades['d'] if t['t'] >= ts]
             if trades and new_only:
                 ts: int = trades[0]['timestamp']
             yield trades
@@ -316,6 +316,7 @@ class OpiumApi:
         'asks': [[20.09, 3], [20.27, 1], [20.43, 5], [20.49, 5], [21.58, 2], [22.004, 1], [22.047, 1]...
         """
         async for ob in self.listen_for_order_book_diffs(trading_pair=trading_pair):
+            await asyncio.sleep(0.25)
             await self.close()
             return ob
 
