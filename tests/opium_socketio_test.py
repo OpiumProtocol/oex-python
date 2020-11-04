@@ -133,21 +133,6 @@ class SocketIOTest:
                                                                         cls.token):
 
                 print(msgs)
-                # r = {'result': {
-                #     'subscription': 'positions:address',
-                #     'channel': 'positions:address',
-                #     'data': [{
-                #
-                #     }]
-                # }}
-                #
-                # ch = msgs['ch']
-                #
-                # print(f"ch: {ch}")
-                # if ch == 'positions:address':
-                #     for p in msgs['d']['pos']:
-                #         print(f"p: {p}")
-        #
         r = asyncio.run(run())
         print(r)
 
@@ -163,4 +148,4 @@ class SocketIOTest:
 
 
 if __name__ == '__main__':
-    SocketIOTest.test_listen_for_account_orders_trades()
+    SocketIOTest.test_get_new_order_book()

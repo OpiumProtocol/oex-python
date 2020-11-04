@@ -287,7 +287,7 @@ class OpiumApi:
 
         async for ob in self.listen_for(['orderbook:orders:ticker'], {'t': ticker_hash,
                                                                       'c': self.get_ticker_token(ticker_hash)}):
-            yield Parser.parse_order_book(ob)
+            yield Parser.parse_order_book(ob['d'])
 
     async def get_account_orders(self, trading_pair, marker_addr, access_token):
         async for orders in self.listen_for_account_orders(trading_pair, marker_addr, access_token):
