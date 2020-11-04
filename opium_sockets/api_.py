@@ -211,14 +211,11 @@ class OpiumApi:
         ticker_hash = self._get_ticker_hash(trading_pair)
 
         last_id: str = '0'
-        # 'orderbook:orders:makerAddress',
-        # 'positions:address'
-        # 'trades:ticker:address'
 
         os = OrdersState()
 
         async for msg in self.listen_for(
-                ['orderbook:orders:makerAddress'],
+                ['orderbook:orders:makerAddress', 'positions:address', 'trades:ticker:address'],
                 {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash), 'addr': maker_addr, 'sig': sig}):
 
             data = msg['d']

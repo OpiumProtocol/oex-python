@@ -72,20 +72,20 @@ class OrdersState:
         return {order['order_id']: order for order in orders}
 
     @staticmethod
-    def __get_filled_orders(current_orders_ids: set, new_orders_ids: set):
+    def __get_filled_orders(current_orders_ids: set, new_orders_ids: set) -> set:
         """
         orders which we had in current_orders and don't have in new_orders
         """
         return current_orders_ids.difference(new_orders_ids)
 
     @staticmethod
-    def __get_new_orders(current_orders_ids: set, new_orders_ids: set):
+    def __get_new_orders(current_orders_ids: set, new_orders_ids: set) -> set:
         """
         orders which we don't have in current_orders and have in new_orders
         """
         return new_orders_ids.difference(current_orders_ids)
 
-    def update(self, orders: List):
+    def update(self, orders: List) -> List:
         orders = self.__to_dict(orders)
 
         # getting filled orders
