@@ -39,7 +39,6 @@ class Parser:
         """
         order = {'i': '5fa128759522f40033ef41c8', 'a': 'BID', 'p': 78, 'q': 17, 'f': -3, 'm': True, 'cT': 1604397173, 'eT': 0}
         """
-        print(f"t: {t}")
         return {
             "status": "ACTIVE",
             "side": "BUY",
@@ -96,7 +95,7 @@ class OrdersState:
 
         for id_ in filled_orders_ids:
             order = self.__orders.pop(id_)
-            order['status'] = 'FILLED'
+            order['status'] = 'CANCELED'
             orders_to_send.append(order)
 
         # getting new orders
