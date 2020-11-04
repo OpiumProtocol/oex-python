@@ -33,3 +33,90 @@ class Parser:
             'fee_currency': 'DAI',
             'order_id': trade.get('oi', 0)
         }
+
+    @staticmethod
+    def parse_order(t, trading_pair):
+        """
+        order = {'i': '5fa128759522f40033ef41c8', 'a': 'BID', 'p': 78, 'q': 17, 'f': -3, 'm': True, 'cT': 1604397173, 'eT': 0}
+        """
+        print(f"t: {t}")
+        return {
+            "status": "ACTIVE",
+            "side": "BUY",
+            "price": t['p'],
+            "quantity": t['q'],
+            "order_id": t['i'],
+            "create_time": t['cT'],
+            "type": "LIMIT",
+            "instrument_name": trading_pair,
+            "cumulative_quantity": t['q'] - abs(t['f']),
+            "cumulative_value": (t['q'] - abs(t['f'])) * t['p'],
+            "fee_currency": "DAI",
+        }
+
+    @staticmethod
+    def parse_position(t, trading_pair):
+        return {
+            "currency": trading_pair,
+            "balance": t['q'],
+            "available": t['q'],
+        }
+
+
+class OrdersState:
+    def __init__(self):
+        self.__orders = {}
+
+    @staticmethod
+    def __to_dict(orders: List) -> Dict:
+        return {order['order_id']: order for order in orders}
+
+    @staticmethod
+    def __get_filled_orders(current_orders_ids: set, new_orders_ids: set):
+        """
+        orders which we had in current_orders and don't have in new_orders
+        """
+        return current_orders_ids.difference(new_orders_ids)
+
+    @staticmethod
+    def __get_new_orders(current_orders_ids: set, new_orders_ids: set):
+        """
+        orders which we don't have in current_orders and have in new_orders
+        """
+        return new_orders_ids.difference(current_orders_ids)
+
+    def update(self, orders: List):
+        orders = self.__to_dict(orders)
+
+        # getting filled orders
+        filled_orders_ids: set = self.__get_filled_orders(set(self.__orders.keys()),
+                                                          set(orders.keys()))
+
+        orders_to_send = []
+
+        for id_ in filled_orders_ids:
+            order = self.__orders.pop(id_)
+            order['status'] = 'FILLED'
+            orders_to_send.append(order)
+
+        # getting new orders
+        new_orders_ids: set = self.__get_new_orders(set(self.__orders.keys()),
+                                                    set(orders.keys()))
+
+        for id_ in new_orders_ids:
+            new_order = orders.pop(id_)
+            new_order['status'] = 'ACTIVE'
+            self.__orders[id_] = new_order
+            orders_to_send.append(new_order)
+
+        return orders_to_send
+
+
+def orders_state_test():
+    os = OrdersState()
+
+    r = os.update([{'order_id': 1, 'val': 1}, {'order_id': 2, 'val': 2}])
+    print(f"r: {r}")
+
+    r = os.update([{'order_id': 2, 'val': 2}, {'order_id': 3, 'val': 3}])
+    print(f"r: {r}")

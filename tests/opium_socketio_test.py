@@ -45,8 +45,6 @@ def test_listen_for_trades():
     print(r)
 
 
-
-
 def test_get_order_status():
     client = OpiumClient(read_config('public_key'), read_config('private_key'))
 
@@ -75,21 +73,24 @@ class SocketIOTest:
     @classmethod
     def test_listen_for_trades(cls):
         async def run():
+            counter = 0
             async for trades in OpiumApi(test_api=True).listen_for_trades(trading_pair=cls.trading_pair, new_only=True):
                 for t in trades:
-                    print(f"t: {t}")
+                    counter += 1
+                    print(f"t: {counter} {t}")
 
         r = asyncio.run(run())
         print(r)
-
 
     @classmethod
     def test_listen_for_account_trades(cls):
         async def run():
             socketio = OpiumApi(test_api=True)
-            async for trades in socketio.listen_for_account_trades(cls.trading_pair, cls.client.get_public_key(), cls.token):
+            async for trades in socketio.listen_for_account_trades(cls.trading_pair, cls.client.get_public_key(),
+                                                                   cls.token):
                 for trade in trades:
                     print(f"t: {trade}")
+
         r = asyncio.run(run())
         print(r)
 
@@ -97,9 +98,11 @@ class SocketIOTest:
     def test_listen_for_account_orders(cls):
         async def run():
             socketio = OpiumApi(test_api=True)
-            async for orders in socketio.listen_for_account_orders(cls.trading_pair, cls.client.get_public_key(), cls.token):
+            async for orders in socketio.listen_for_account_orders(cls.trading_pair, cls.client.get_public_key(),
+                                                                   cls.token):
                 for order in orders:
                     print(f"t: {order}")
+
         r = asyncio.run(run())
         print(r)
 
@@ -114,6 +117,50 @@ class SocketIOTest:
         r = asyncio.run(run())
         print(r)
 
+    @classmethod
+    def test_get_new_order_book(cls):
+        async def run():
+            return await OpiumApi(test_api=True).get_new_order_book(trading_pair=cls.trading_pair)
+
+        r = asyncio.run(run())
+        print(r)
+
+    @classmethod
+    def test_listen_for_account_orders_trades(cls):
+        async def run():
+            socketio = OpiumApi(test_api=True)
+            async for msgs in socketio.listen_for_account_trades_orders(cls.trading_pair, cls.client.get_public_key(),
+                                                                        cls.token):
+
+                print(msgs)
+                # r = {'result': {
+                #     'subscription': 'positions:address',
+                #     'channel': 'positions:address',
+                #     'data': [{
+                #
+                #     }]
+                # }}
+                #
+                # ch = msgs['ch']
+                #
+                # print(f"ch: {ch}")
+                # if ch == 'positions:address':
+                #     for p in msgs['d']['pos']:
+                #         print(f"p: {p}")
+        #
+        r = asyncio.run(run())
+        print(r)
+
+    @classmethod
+    def test_listen_for_balance(cls):
+        async def run():
+            socketio = OpiumApi(test_api=True)
+            async for msgs in socketio.listen_for_balance(cls.client):
+                print(f"msgs: {msgs}")
+
+        r = asyncio.run(run())
+        print(r)
+
 
 if __name__ == '__main__':
-    SocketIOTest.test_listen_for_trades()
+    SocketIOTest.test_listen_for_account_orders_trades()
