@@ -36,7 +36,6 @@ class Parser:
 
     @staticmethod
     def parse_order(t, trading_pair):
-        print(f"t: {t}")
         """
         order = {'i': '5fa128759522f40033ef41c8', 'a': 'BID', 'p': 78, 'q': 17, 'f': -3, 'm': True, 'cT': 1604397173, 'eT': 0}
         """
