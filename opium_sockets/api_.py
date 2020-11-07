@@ -6,7 +6,7 @@ import datetime as dt
 from socketio import AsyncClient
 
 from opium_api import OpiumClient
-from .parsers import Parser, OrdersState
+from .parsers import Parser, OrdersState, AccountOrders
 
 
 class SocketBase:
@@ -214,13 +214,23 @@ class OpiumApi:
 
         os = OrdersState()
 
-        async for msg in self.listen_for(
-                ['orderbook:orders:makerAddress', 'positions:address', 'trades:ticker:address'],
-                {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash), 'addr': maker_addr, 'sig': sig}):
+        acc_orders = AccountOrders()
 
+        channels = ['orderbook:orders:makerAddress', 'positions:address', 'trades:ticker:address']
+        channels = ['orderbook:orders:makerAddress:updates']
+
+        async for msg in self.listen_for(channels,
+                                         {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash), 'addr': maker_addr,
+                                          'sig': sig}):
             data = msg['d']
+
+            # we don't use this channel anymore
             if (msg_ch := msg['ch']) == 'orderbook:orders:makerAddress':
                 data = os.update([Parser.parse_order(order, trading_pair) for order in data])
+
+            elif msg_ch == 'orderbook:orders:makerAddress:updates':
+                msg_type = msg['a']
+                data = acc_orders.update(data, trading_pair, msg_type)
 
 
             elif msg_ch == 'trades:ticker:address':

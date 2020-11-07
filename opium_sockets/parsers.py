@@ -36,11 +36,12 @@ class Parser:
 
     @staticmethod
     def parse_order(t, trading_pair):
+        print(f"t: {t}")
         """
         order = {'i': '5fa128759522f40033ef41c8', 'a': 'BID', 'p': 78, 'q': 17, 'f': -3, 'm': True, 'cT': 1604397173, 'eT': 0}
         """
         return {
-            "status": "ACTIVE",
+            "status": t['s'],
             "side": "BUY",
             "price": t['p'],
             "quantity": t['q'],
@@ -119,3 +120,33 @@ def orders_state_test():
 
     r = os.update([{'order_id': 2, 'val': 2}, {'order_id': 3, 'val': 3}])
     print(f"r: {r}")
+
+
+class AccountOrders:
+    def __init__(self):
+        self.__orders = {}
+
+
+    def update(self, orders, trading_pair, msg_type):
+        r = []
+        if msg_type == 'SET':
+            for order in orders:
+                order = Parser.parse_order(order, trading_pair)
+                if order['status'] == 'PROCESSED':
+                    order['status'] = 'ACTIVE'
+                    self.__orders[order['order_id']] = order
+                    r.append(order)
+        # UPDATE
+        else:
+            for order in orders:
+                order = Parser.parse_order(order, trading_pair)
+                order_id = order['order_id']
+                order_status = order['status']
+
+                if order_status in {'CANCELED', 'FILLED'} and self.__orders.pop(order_id, None) is not None:
+                    r.append(order)
+                elif order_status in {'NEW', 'PROCESSED'} and order_id not in self.__orders:
+                    order['status'] = 'OPEN'
+                    self.__orders[order_id] = order
+                    r.append(order)
+        return r
