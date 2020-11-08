@@ -1,4 +1,5 @@
 import asyncio
+from functools import lru_cache
 from json.decoder import JSONDecodeError
 from typing import Dict, List, Any
 import requests
@@ -161,6 +162,7 @@ class OpiumApi:
             self._last_recv_time = dt.datetime.now().timestamp()
             yield msg
 
+    @lru_cache(maxsize=128, typed=False)
     def _get_ticker_hash(self, trading_pair: str):
         traded_tickers = self.get_traded_tickers()
         try:

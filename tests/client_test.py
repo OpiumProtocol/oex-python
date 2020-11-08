@@ -33,6 +33,9 @@ def test_cancel_order():
 
     print(f"r: {r}")
 
+def get_ticker_hash():
+    ticker_hash = client._get_ticker_hash('OEX-FUT-1DEC-135.00')
+    print(f"ticker_hash: {ticker_hash}")
 
 if __name__ == '__main__':
-    test_cancel_order()
+    get_ticker_hash()

@@ -155,5 +155,17 @@ class SocketIOTest:
         r = asyncio.run(run())
         print(r)
 
+    @classmethod
+    def get_ticker_hash(cls):
+        async def run():
+            await asyncio.sleep()
+            trading_pair = 'OEX-FUT-1DEC-135.00'
+            socketio = OpiumApi(test_api=True)
+            p = socketio._get_ticker_hash(trading_pair)
+            print(f"p: {p}")
+
+        r = asyncio.run(run())
+        print(r)
+
 if __name__ == '__main__':
-    SocketIOTest.test_get_new_order_book()
+    SocketIOTest.get_ticker_hash()
