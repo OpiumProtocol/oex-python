@@ -1,7 +1,7 @@
 import asyncio
-from functools import lru_cache
-from json.decoder import JSONDecodeError
 from typing import Dict, List, Any
+
+import aiohttp
 import requests
 import datetime as dt
 from socketio import AsyncClient
@@ -125,7 +125,7 @@ class OpiumApi:
 
         self._socket = SocketBase(test_api=True)
         self.traded_tickers = self.get_traded_tickers()
-        self.tickers_hashes = {}
+        self.tickers_tokens = {}
 
     def get_last_message_time(self):
         return self._last_recv_time
@@ -138,9 +138,13 @@ class OpiumApi:
         r = requests.get(f'{self.endpoint}tickers?expired=false')
         return {ticker['productTitle']: ticker['hash'] for ticker in r.json()}
 
-    def get_ticker_token(self, ticker_hash: str) -> str:
-        # TODO: move this method into Opium Client
-        return requests.get(f'{self.endpoint}tickers/data/{ticker_hash}').json()[0]['token']
+    async def get_ticker_token(self, ticker_hash: str) -> str:
+        if (token := self.tickers_tokens.get(ticker_hash)) is None:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f'{self.endpoint}tickers/data/{ticker_hash}') as resp:
+                    token = (await resp.json())[0]['token']
+                    self.tickers_tokens[ticker_hash] = token
+        return token
 
     async def get_latest_price(self, ticker: str) -> Dict[str, str]:
         async for trades in self.listen_for_trades(ticker, new_only=False):
@@ -178,7 +182,7 @@ class OpiumApi:
         ticker_hash = self._get_ticker_hash(trading_pair)
 
         async for order in self.listen_for(['orderbook:orders:makerAddress'], {'t': ticker_hash,
-                                                                               'c': self.get_ticker_token(ticker_hash),
+                                                                               'c': await self.get_ticker_token(ticker_hash),
                                                                                'addr': maker_addr,
                                                                                'sig': sig}):
             yield order
@@ -192,7 +196,7 @@ class OpiumApi:
         ts: int = int(dt.datetime.now().timestamp()) if new_only else 0
 
         async for trades in self.listen_for(['trades:ticker:address'], {'t': ticker_hash,
-                                                                        'c': self.get_ticker_token(ticker_hash),
+                                                                        'c': await self.get_ticker_token(ticker_hash),
                                                                         'addr': maker_addr,
                                                                         'sig': sig}):
             trades = [Parser.parse_account_trade(t, trading_pair) for t in trades if t['t'] >= ts]
@@ -212,11 +216,11 @@ class OpiumApi:
 
         acc_orders = AccountOrders()
 
-        channels = ['orderbook:orders:makerAddress', 'positions:address', 'trades:ticker:address']
-        channels = ['orderbook:orders:makerAddress:updates']
+        channels = ['orderbook:orders:makerAddress:updates', 'positions:address', 'trades:ticker:address']
+        # channels = ['orderbook:orders:makerAddress:updates']
 
         async for msg in self.listen_for(channels,
-                                         {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash), 'addr': maker_addr,
+                                         {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash), 'addr': maker_addr,
                                           'sig': sig}):
             data = msg['d']
 
@@ -282,7 +286,7 @@ class OpiumApi:
         ts: int = int(dt.datetime.now().timestamp()) if new_only else 0
 
         async for trades in self.listen_for(['trades:ticker:all'],
-                                            {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash)}):
+                                            {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash)}):
             trades = [self.parse_trade(t, trading_pair) for t in trades['d'] if t['t'] >= ts]
             if trades and new_only:
                 ts: int = trades[0]['timestamp']
@@ -292,7 +296,7 @@ class OpiumApi:
         ticker_hash = self._get_ticker_hash(trading_pair)
 
         async for ob in self.listen_for(['orderbook:orders:ticker'], {'t': ticker_hash,
-                                                                      'c': self.get_ticker_token(ticker_hash)}):
+                                                                      'c': await self.get_ticker_token(ticker_hash)}):
             yield Parser.parse_order_book(ob['d'])
 
     async def get_account_orders(self, trading_pair, marker_addr, access_token):
@@ -348,7 +352,7 @@ def temp():
         # TODO: add queue
 
         async for trades in self.listen_for('trades:ticker:all',
-                                            {'t': ticker_hash, 'c': self.get_ticker_token(ticker_hash)}):
+                                            {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash)}):
 
             if init:
                 init = False
