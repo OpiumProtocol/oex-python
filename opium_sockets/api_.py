@@ -111,32 +111,32 @@ class SocketBase:
             return msg
 
 
+def get_traded_tickers() -> Dict[str, str]:
+    """
+    Get not expired tickers
+    """
+    r = requests.get(f'https://api-test.opium.exchange/v1/tickers?expired=false')
+    return {ticker['productTitle']: ticker['hash'] for ticker in r.json()}
+
+
 class OpiumApi:
     TEST_ENDPOINT = 'https://api-test.opium.exchange/'
     ENDPOINT = 'https://api.opium.exchange/'
 
     NAMESPACE = 'v1/'
 
+    traded_tickers = get_traded_tickers()
+
     def __init__(self, test_api=False):
         self.endpoint = (OpiumApi.TEST_ENDPOINT if test_api else OpiumApi.ENDPOINT) + self.NAMESPACE
         self._last_recv_time: float = 0
         self._current_channels = None
         self._current_subscription = None
-
         self._socket = SocketBase(test_api=True)
-        self.traded_tickers = self.get_traded_tickers()
         self.tickers_tokens = {}
 
     def get_last_message_time(self):
         return self._last_recv_time
-
-    def get_traded_tickers(self) -> Dict[str, str]:
-        # TODO: move this method into Opium Client
-        """
-        Get not expired tickers
-        """
-        r = requests.get(f'{self.endpoint}tickers?expired=false')
-        return {ticker['productTitle']: ticker['hash'] for ticker in r.json()}
 
     async def get_ticker_token(self, ticker_hash: str) -> str:
         if (token := self.tickers_tokens.get(ticker_hash)) is None:
@@ -182,7 +182,8 @@ class OpiumApi:
         ticker_hash = self._get_ticker_hash(trading_pair)
 
         async for order in self.listen_for(['orderbook:orders:makerAddress'], {'t': ticker_hash,
-                                                                               'c': await self.get_ticker_token(ticker_hash),
+                                                                               'c': await self.get_ticker_token(
+                                                                                   ticker_hash),
                                                                                'addr': maker_addr,
                                                                                'sig': sig}):
             yield order
@@ -220,7 +221,8 @@ class OpiumApi:
         # channels = ['orderbook:orders:makerAddress:updates']
 
         async for msg in self.listen_for(channels,
-                                         {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash), 'addr': maker_addr,
+                                         {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash),
+                                          'addr': maker_addr,
                                           'sig': sig}):
             data = msg['d']
 
