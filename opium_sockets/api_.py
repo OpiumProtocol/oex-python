@@ -140,15 +140,9 @@ class OpiumApi:
         return requests.get(f'{self.endpoint}tickers/data/{ticker_hash}').json()[0]['token']
 
     async def get_latest_price(self, ticker: str) -> Dict[str, str]:
-        # TODO move ex handling into get_as_rest(...)
-        try:
-            r = await self.get_as_rest('trades:ticker:all', ticker)
-            trades: List = r.get('d', [])
-            price = trades[0]['p'] if trades else None
-            return {ticker: str(price)}
-        except JSONDecodeError as ex:
-            print(f"ex: {ex} check if the server works")
-            return {}
+        async for trades in self.listen_for_trades(ticker, new_only=False):
+            await self.close()
+            return {ticker: str(trades[0]['price'])}
 
     @staticmethod
     def get_timestamp() -> int:

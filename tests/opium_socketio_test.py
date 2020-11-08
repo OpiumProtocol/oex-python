@@ -146,6 +146,14 @@ class SocketIOTest:
         r = asyncio.run(run())
         print(r)
 
+    @classmethod
+    def get_latest_price(cls):
+        async def run():
+            socketio = OpiumApi(test_api=True)
+            p = await socketio.get_latest_price(cls.trading_pair)
+            print(f"p: {p}")
+        r = asyncio.run(run())
+        print(r)
 
 if __name__ == '__main__':
-    SocketIOTest.test_listen_for_account_orders_trades()
+    SocketIOTest.test_get_new_order_book()
