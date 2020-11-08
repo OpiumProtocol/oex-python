@@ -172,7 +172,7 @@ class OpiumApi:
         try:
             return self.traded_tickers[trading_pair]
         except KeyError:
-            print('Ticker is not in traded tickers')
+            print(f'Ticker {trading_pair} is not in traded tickers')
             return
 
     async def listen_for_account_orders(self, trading_pair: str, maker_addr: str, sig: str):
