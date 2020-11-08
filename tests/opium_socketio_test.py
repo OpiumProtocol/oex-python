@@ -131,8 +131,8 @@ class SocketIOTest:
             socketio = OpiumApi(test_api=True)
             async for msgs in socketio.listen_for_account_trades_orders(cls.trading_pair, cls.client.get_public_key(),
                                                                         cls.token):
-
                 print(msgs)
+
         r = asyncio.run(run())
         print(r)
 
@@ -152,20 +152,21 @@ class SocketIOTest:
             socketio = OpiumApi(test_api=True)
             p = await socketio.get_latest_price(cls.trading_pair)
             print(f"p: {p}")
+
         r = asyncio.run(run())
         print(r)
 
     @classmethod
     def get_ticker_hash(cls):
         async def run():
-            await asyncio.sleep()
-            trading_pair = 'OEX-FUT-1DEC-135.00'
+            await asyncio.sleep(0.1)
             socketio = OpiumApi(test_api=True)
-            p = socketio._get_ticker_hash(trading_pair)
+            p = socketio._get_ticker_hash('OEX-FUT-1DEC-135.00')
             print(f"p: {p}")
 
         r = asyncio.run(run())
         print(r)
 
+
 if __name__ == '__main__':
-    SocketIOTest.get_ticker_hash()
+    SocketIOTest.test_get_new_order_book()

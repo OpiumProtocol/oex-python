@@ -124,6 +124,8 @@ class OpiumApi:
         self._current_subscription = None
 
         self._socket = SocketBase(test_api=True)
+        self.traded_tickers = self.get_traded_tickers()
+        self.tickers_hashes = {}
 
     def get_last_message_time(self):
         return self._last_recv_time
@@ -162,11 +164,9 @@ class OpiumApi:
             self._last_recv_time = dt.datetime.now().timestamp()
             yield msg
 
-    @lru_cache(maxsize=128, typed=False)
     def _get_ticker_hash(self, trading_pair: str):
-        traded_tickers = self.get_traded_tickers()
         try:
-            return traded_tickers[trading_pair]
+            return self.traded_tickers[trading_pair]
         except KeyError:
             print('Ticker is not in traded tickers')
             return
@@ -322,7 +322,6 @@ class OpiumApi:
         'asks': [[20.09, 3], [20.27, 1], [20.43, 5], [20.49, 5], [21.58, 2], [22.004, 1], [22.047, 1]...
         """
         async for ob in self.listen_for_order_book_diffs(trading_pair=trading_pair):
-            await asyncio.sleep(0.25)
             await self.close()
             return ob
 

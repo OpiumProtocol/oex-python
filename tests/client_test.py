@@ -6,17 +6,14 @@ from opium_api import OpiumClient
 from opium_api.enums import OrderBookAction
 from opium_sockets import OpiumApi
 
-
 client = OpiumClient(read_config('public_key'), read_config('private_key'))
 
 
 def get_balance_test():
-
     print(f"balance: {client.get_balance()}")
 
 
 def test_limit_buy_sell():
-
     # order: [{'id': '5f92b180603bd50028f46a82'}]
     order = client.create_order('OEX-FUT-1DEC-135.00',
                                 side='BUY',
@@ -33,9 +30,7 @@ def test_cancel_order():
 
     print(f"r: {r}")
 
-def get_ticker_hash():
-    ticker_hash = client._get_ticker_hash('OEX-FUT-1DEC-135.00')
-    print(f"ticker_hash: {ticker_hash}")
+
 
 if __name__ == '__main__':
-    get_ticker_hash()
+    pass
