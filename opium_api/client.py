@@ -27,17 +27,32 @@ class OpiumClient:
         self.__access_token: str = ''
         self.__private_key: bytes = bytes.fromhex(private_key)
         self.__public_key: str = public_key
+
+        self.__tickers = self.__get_tickers()
         self.__traded_tickers: Dict[str, str] = self.get_traded_tickers()
 
     def get_public_key(self):
         return self.__public_key
 
+    def hb_ticker_to_opium_ticker(self, ticker: str):
+        for t in self.__tickers:
+            if t['botTitle'] == ticker:
+                return t['productTitle']
+        raise Exception(f'Ticker: {ticker} is not found')
+
+
+    def __get_tickers(self):
+        """
+        Get not expired tickers
+        """
+        return requests.get(f'{self.__api_url}/tickers?expired=false').json()
+
+
     def get_traded_tickers(self) -> Dict[str, str]:
         """
         Get not expired tickers
         """
-        r = requests.get(f'{self.__api_url}/tickers?expired=false')
-        return {ticker['productTitle']: ticker['hash'] for ticker in r.json()}
+        return {ticker['productTitle']: ticker['hash'] for ticker in self.__tickers}
 
     def get_ticker_token(self, ticker_hash: str) -> str:
         return requests.get(f'{self.__api_url}/tickers/data/{ticker_hash}').json()[0]['token']

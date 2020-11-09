@@ -31,6 +31,16 @@ def test_cancel_order():
     print(f"r: {r}")
 
 
+def test_get_traded_tickers():
+    print(client.get_traded_tickers())
+
+
+def test_convert_bot_ticker_to_opium_ticker():
+    """
+    SYNTH_17JUL_.-DAI to SYNTH-17JUL-.
+    """
+    print(client.hb_ticker_to_opium_ticker('SYNTH_17JUL_.-DAI'))
+
 
 if __name__ == '__main__':
-    pass
+    test_convert_bot_ticker_to_opium_ticker()
