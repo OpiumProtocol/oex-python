@@ -43,4 +43,4 @@ def test_convert_bot_ticker_to_opium_ticker():
 
 
 if __name__ == '__main__':
-    test_convert_bot_ticker_to_opium_ticker()
+    get_balance_test()
