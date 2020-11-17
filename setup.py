@@ -27,12 +27,12 @@ setup(
         'pycryptodome==3.9.8',
         'python-socketio==4.6.0',
         'PyYAML==5.3.1',
-        'requests==2.24.0',
+        'requests==2.25.0',
         'rlp==1.2.0',
         'shellescape==3.8.1',
         'six==1.15.0',
-        'urllib3==1.25.10',
-        'web3==5.12.2'
+        'urllib3==1.26.2',
+        'web3==5.13.0'
     ],
     url='https://none',
 )

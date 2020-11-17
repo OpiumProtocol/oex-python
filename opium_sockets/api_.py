@@ -1,114 +1,13 @@
 import asyncio
-from typing import Dict, List, Any
+import datetime as dt
+from typing import Dict, List
 
 import aiohttp
 import requests
-import datetime as dt
-from socketio import AsyncClient
 
 from opium_api import OpiumClient
-from .parsers import Parser, OrdersState, AccountOrders
-
-
-class SocketBase:
-    """
-    SocketIO wrapper
-    """
-    TEST_ENDPOINT = 'https://api-test.opium.exchange'
-    ENDPOINT = 'https://api.opium.exchange'
-
-    NAMESPACE = '/v1'
-
-    def __init__(self, test_api=False, debug=False):
-        self.endpoint = (SocketBase.TEST_ENDPOINT if test_api else SocketBase.ENDPOINT) + self.NAMESPACE + '/'
-        self._sio = AsyncClient(engineio_logger=debug, logger=True)
-        self.queue: asyncio.Queue = asyncio.Queue()
-
-    async def init(self):
-        await self.register_event('connect', self.connect_handler)
-        await self.register_event('connect_error', self.connect_error_handler)
-        await self.register_event('disconnect', self.disconnect_handler)
-
-    @staticmethod
-    async def connect_handler():
-        print("I'm connected!")
-
-    @staticmethod
-    async def connect_error_handler():
-        print("The connection failed!")
-
-    @staticmethod
-    async def disconnect_handler():
-        print("I'm disconnected!")
-
-    async def connect(self):
-        await self._sio.connect(url=self.endpoint, transports=['polling', 'websocket'], namespaces=[self.NAMESPACE])
-        await asyncio.sleep(1)
-
-    async def disconnect(self):
-        await self._sio.disconnect()
-
-    async def emit(self, event: str, data):
-        await self._sio.emit(event=event, data=data, callback=self.callback, namespace=self.NAMESPACE)
-
-    async def register_event(self, event, handler=None):
-        if handler is None:
-            handler = self.handler
-        self._sio.on(event=event, handler=handler, namespace=self.NAMESPACE)
-
-    async def callback(self, data):
-        await asyncio.sleep(0)
-        print('callback')
-        print(f"data: {data}")
-
-    async def handler(self, data):
-        await self.queue.put(data)
-
-    async def subscribe(self, channels: List[str], **kwargs):
-        for channel in channels:
-            s = {'ch': channel}
-            s.update(kwargs)
-            await self.register_event(channel)
-            await self.emit('subscribe', s)
-            await asyncio.sleep(0.25)
-
-    async def unsubscribe(self, channels: List[str], **kwargs):
-        for channel in channels:
-            s = {'ch': channel}
-            s.update(kwargs)
-            await self.emit('unsubscribe', s)
-
-    async def listen_for(self, channels: List, **kwargs):
-        """
-        Move this into base_class
-        """
-        await self.init()
-        await self.connect()
-
-        # TODO: pass different kwargs
-        await self.subscribe(channels=channels, **kwargs)
-
-        while True:
-            msg = await self.queue.get()
-            self.queue.task_done()
-            yield msg
-
-    async def read_once(self, channel, **kwargs):
-        """
-        Move this into base_class
-        """
-        await self.init()
-        await self.connect()
-
-        await self.subscribe(channel=channel, **kwargs)
-
-        while True:
-            msg = await self.queue.get()
-            self.queue.task_done()
-            await self.unsubscribe(channel, **kwargs)
-            await asyncio.sleep(0.5)
-            await self.disconnect()
-            return msg
+from .parsers import Parser, AccountOrders
+from .socket_base import SocketBase
 
 
 def get_traded_tickers() -> Dict[str, str]:
@@ -213,12 +112,12 @@ class OpiumApi:
 
         last_id: str = '0'
 
-        os = OrdersState()
 
         acc_orders = AccountOrders()
 
-        channels = ['orderbook:orders:makerAddress:updates', 'positions:address', 'trades:ticker:address']
-        # channels = ['orderbook:orders:makerAddress:updates']
+        channels = ['orderbook:orders:makerAddress:updates',
+                    'positions:address',
+                    'trades:ticker:address']
 
         async for msg in self.listen_for(channels,
                                          {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash),
@@ -226,9 +125,8 @@ class OpiumApi:
                                           'sig': sig}):
             data = msg['d']
 
-            # we don't use this channel anymore
             if (msg_ch := msg['ch']) == 'orderbook:orders:makerAddress':
-                data = os.update([Parser.parse_order(order, trading_pair) for order in data])
+                raise Exception("Use orderbook:orders:makerAddress:updates instead")
 
             elif msg_ch == 'orderbook:orders:makerAddress:updates':
                 msg_type = msg['a']
@@ -330,56 +228,3 @@ class OpiumApi:
         async for ob in self.listen_for_order_book_diffs(trading_pair=trading_pair):
             await self.close()
             return ob
-
-
-def temp():
-    async def listen_for_trades(self, trading_pair: str):
-        """
-        Convert a trade data into standard OrderBookMessage:
-            "exchange_order_id": msg.get("d"),
-            "trade_type": msg.get("s"),
-            "price": msg.get("p"),
-            "amount": msg.get("q")
-
-        """
-
-        ticker_hash = self._get_ticker_hash(trading_pair)
-
-        delta: int = int(dt.timedelta(days=-5).total_seconds())
-
-        last_ts: int = self.get_timestamp() - delta
-
-        last_trade_tx: str = ''
-        init = True
-        # TODO: add queue
-
-        async for trades in self.listen_for('trades:ticker:all',
-                                            {'t': ticker_hash, 'c': await self.get_ticker_token(ticker_hash)}):
-
-            if init:
-                init = False
-                t = trades[-1]
-                last_trade_tx = t['tx']
-
-            found_last_tx = False
-            for t in reversed(trades):
-                tx = t['tx']
-
-                if found_last_tx:
-                    # new trades
-                    ts = self.get_timestamp()
-                    last_trade_tx = tx
-                    trade = {
-                        'trading_pair': trading_pair,
-                        'trade_type': 'na',
-                        'exchange_order_id': t['tx'],
-                        'update_id': self.get_timestamp(),
-                        'price': t['p'],
-                        'amount': t['q'],
-                        'timestamp': self.get_timestamp()
-                    }
-                    yield trade
-
-                if last_trade_tx == tx and found_last_tx is False:
-                    found_last_tx = True
-#
