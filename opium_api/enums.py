@@ -1,10 +1,10 @@
-from enum import IntEnum, Enum
+from enum import Enum
 
 
-class HttpMethod(IntEnum):
-    get = 1
-    post = 2
-    put = 3
+class HttpMethod(Enum):
+    get = 'get'
+    post = 'post'
+    put = 'put'
 
 
 class OrderBookAction(Enum):

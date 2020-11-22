@@ -279,9 +279,9 @@ class OpiumClient:
                 raise NotImplementedError(f"wey to {token['decimals']} decimals converter is not implemented")
             else:
                 total = wei_to_ether(int(token['total']))
-            # TODO: available != total
-            r.append({'currency': token['title'], 'balance': total, 'available': total})
-        return {'accounts': r}
+
+            r.append({'asset': token['title'], 'free': total})
+        return {'balances': r}
 
     def create_order(self, instrument_name: str, side: str, price, quantity: str):
         action = OrderBookAction.bid if side == 'BUY' else OrderBookAction.ask
