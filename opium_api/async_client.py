@@ -29,6 +29,11 @@ class AsyncOpiumClient:
         self.__tickers = None
         self.__traded_tickers: Dict[str, str] = {}
 
+    async def check_network(self):
+        async with self.__session.get(f'{self.__api_url}/meta/config') as r:
+            return await r.json()
+
+
     async def close(self):
         await self.__session.close()
 

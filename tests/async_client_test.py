@@ -76,9 +76,21 @@ def get_traded_tickers_test():
     asyncio.run(run())
 
 
+def check_network_test():
+
+    async def run():
+        client = AsyncOpiumClient(read_config('public_key'), read_config('private_key'))
+        await client.init()
+        r = await client.check_network()
+        print(f"r: {r}")
+
+        await client.close()
+
+    asyncio.run(run())
+
 
 
 if __name__ == '__main__':
-    get_traded_tickers_test()
+    check_network_test()
     # get_balance_async_test()
     # get_tickers_test()
