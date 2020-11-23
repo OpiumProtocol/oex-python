@@ -283,8 +283,8 @@ class AsyncOpiumClient:
             else:
                 total = wei_to_ether(int(token['total']))
 
-            r.append({'asset': token['title'], 'free': total})
-        return {'balances': r}
+            r.append({'currency': token['title'], 'balance': total, 'available': total})
+        return {'accounts': r}
 
     async def create_order(self, instrument_name: str, side: str, price, quantity: str):
         action = OrderBookAction.bid if side == 'BUY' else OrderBookAction.ask
