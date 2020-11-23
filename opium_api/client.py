@@ -280,7 +280,7 @@ class OpiumClient:
             else:
                 total = wei_to_ether(int(token['total']))
 
-            r.append({'asset': token['title'], 'free': total})
+            r.append({'currency': token['title'], 'balance': total, 'available': total})
         return {'balances': r}
 
     def create_order(self, instrument_name: str, side: str, price, quantity: str):

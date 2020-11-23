@@ -82,11 +82,12 @@ def check_network_test():
         client = AsyncOpiumClient(read_config('public_key'), read_config('private_key'))
         await client.init()
         r = await client.check_network()
+
         print(f"r: {r}")
 
         await client.close()
 
-    asyncio.run(run())
+    asyncio.run(asyncio.create_task(run()))
 
 
 
