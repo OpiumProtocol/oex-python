@@ -281,7 +281,7 @@ class OpiumClient:
                 total = wei_to_ether(int(token['total']))
 
             r.append({'currency': token['title'], 'balance': total, 'available': total})
-        return {'balances': r}
+        return {'accounts': r}
 
     def create_order(self, instrument_name: str, side: str, price, quantity: str):
         action = OrderBookAction.bid if side == 'BUY' else OrderBookAction.ask
