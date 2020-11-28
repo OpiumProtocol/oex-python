@@ -1,7 +1,9 @@
 import asyncio
 from typing import List
-
+import logging
 from socketio import AsyncClient
+
+logger = logging.getLogger(__name__)
 
 
 class SocketBase:
@@ -25,15 +27,15 @@ class SocketBase:
 
     @staticmethod
     async def connect_handler():
-        print("I'm connected!")
+        logger.info("I'm connected!")
 
     @staticmethod
     async def connect_error_handler():
-        print("The connection failed!")
+        logger.info("The connection failed!")
 
     @staticmethod
     async def disconnect_handler():
-        print("I'm disconnected!")
+        logger.info("I'm disconnected!")
 
     async def connect(self):
         await self._sio.connect(url=self.endpoint, transports=['polling', 'websocket'], namespaces=[self.NAMESPACE])
