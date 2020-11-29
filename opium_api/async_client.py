@@ -314,3 +314,29 @@ class AsyncOpiumClient:
     async def cancel_order(self, order_ids: List[str]):
         # TODO: Think about return
         return await self.__api_orderbook_cancel(order_ids=order_ids)
+
+    async def get_instruments(self):
+        # TODO extend to all opium instruments
+        return {
+            "id": 11,
+            "method": "public/get-instruments",
+            "code": 0,
+            "result": {
+                "instruments": [
+                    {
+                        "instrument_name": "OEX_FUT_1DEC_135.00-DAI",
+                        "quote_currency": "DAI",
+                        "base_currency": "OEX-FUT-1DEC-135.00",
+                        "price_decimals": 2,
+                        "quantity_decimals": 2
+                    },
+                    {
+                        "instrument_name": "OEX-FUT-1DEC-135.00",
+                        "quote_currency": "DAI",
+                        "base_currency": "OEX-FUT-1DEC-135.00",
+                        "price_decimals": 2,
+                        "quantity_decimals": 2
+                    }
+                ]
+            }
+        }
