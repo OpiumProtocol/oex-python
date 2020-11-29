@@ -99,7 +99,7 @@ class OpiumApi:
                                                                         'c': await self.get_ticker_token(ticker_hash),
                                                                         'addr': maker_addr,
                                                                         'sig': sig}):
-            trades = [Parser.parse_account_trade(t, trading_pair) for t in trades if t['t'] >= ts]
+            trades = [Parser.parse_account_trade(t, trading_pair) for t in trades['d'] if t['t'] >= ts]
             if trades and new_only:
                 ts: int = trades[0]['create_time']
             yield trades
@@ -199,8 +199,8 @@ class OpiumApi:
                                                                       'c': await self.get_ticker_token(ticker_hash)}):
             yield Parser.parse_order_book(ob['d'])
 
-    async def get_account_orders(self, trading_pair, marker_addr, access_token):
-        async for orders in self.listen_for_account_orders(trading_pair, marker_addr, access_token):
+    async def get_account_orders(self, trading_pair, maker_addr, access_token):
+        async for orders in self.listen_for_account_orders(trading_pair, maker_addr, access_token):
             await self.close()
             return orders
             # for order in orders:

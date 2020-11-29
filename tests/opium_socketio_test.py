@@ -167,6 +167,31 @@ class SocketIOTest:
         r = asyncio.run(run())
         print(r)
 
+    @classmethod
+    def get_account_orders(cls):
+        async def run():
+            await asyncio.sleep(0.1)
+            socketio = OpiumApi(test_api=True)
+            p = await socketio.get_account_orders('OEX-FUT-1DEC-135.00', maker_addr=cls.client.get_public_key(),
+                                            access_token=cls.token)
+            print(f"p: {p}")
+
+        r = asyncio.run(run())
+        print(r)
+
+    @classmethod
+    def get_account_trades(cls):
+        async def run():
+            await asyncio.sleep(0.1)
+            socketio = OpiumApi(test_api=True)
+            p = await socketio.get_account_trades('OEX-FUT-1DEC-135.00', maker_addr=cls.client.get_public_key(),
+                                            access_token=cls.token)
+            print(f"p: {p}")
+
+        r = asyncio.run(run())
+        print(r)
+
 
 if __name__ == '__main__':
-    SocketIOTest.test_get_new_order_book()
+    SocketIOTest.get_account_orders()
+    SocketIOTest.get_account_trades()
