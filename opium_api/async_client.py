@@ -322,16 +322,9 @@ class AsyncOpiumClient:
             "result": {
                 "instruments": [
                     {
-                        "instrument_name": "OEX_FUT_1DEC_135.00-DAI",
+                        "instrument_name": "OEX-FUT-1JAN-135.00",
                         "quote_currency": "DAI",
-                        "base_currency": "OEX-FUT-1DEC-135.00",
-                        "price_decimals": 2,
-                        "quantity_decimals": 2
-                    },
-                    {
-                        "instrument_name": "OEX-FUT-1DEC-135.00",
-                        "quote_currency": "DAI",
-                        "base_currency": "OEX-FUT-1DEC-135.00",
+                        "base_currency": "OEX-FUT-1JAN-135.00",
                         "price_decimals": 2,
                         "quantity_decimals": 2
                     }
