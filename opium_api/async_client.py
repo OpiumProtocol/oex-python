@@ -327,6 +327,13 @@ class AsyncOpiumClient:
                         "base_currency": "OEX-FUT-1JAN-135.00",
                         "price_decimals": 2,
                         "quantity_decimals": 2
+                    },
+                    {
+                        "instrument_name": "OEX_FUT_1JAN_135.00-DAI",
+                        "quote_currency": "DAI",
+                        "base_currency": "OEX-FUT-1JAN-135.00",
+                        "price_decimals": 2,
+                        "quantity_decimals": 2
                     }
                 ]
             }
