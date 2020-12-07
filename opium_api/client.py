@@ -16,7 +16,7 @@ from opium_api.utils import wei_to_ether
 
 
 class OpiumClient:
-    def __init__(self, public_key: str, private_key: str):
+    def __init__(self, public_key: str, private_key: str, trading_pair: str = None):
         if not private_key:
             raise ValueError('Empty "private_key"')
         if not public_key:
@@ -30,6 +30,11 @@ class OpiumClient:
 
         self.__tickers = self.__get_tickers()
         self.__traded_tickers: Dict[str, str] = self.get_traded_tickers()
+
+        self.trading_pair = trading_pair
+
+    def get_sig(self):
+        return '0x' + self.generate_access_token()
 
     def get_public_key(self):
         return self.__public_key

@@ -1,14 +1,12 @@
 from decimal import Decimal, getcontext
-from http import HTTPStatus
 from typing import Optional, List, Union, Dict
 
-from aiohttp import ClientSession, ClientResponse
+from aiohttp import ClientSession
 
 from libs.py_eth_sig_utils.signing import v_r_s_to_signature, sign_typed_data
-
-from opium_api.enums import HttpMethod, OrderBookAction
 from opium_api.constants import API_VERSION, API_HOST
-from opium_api.exceptions import APIException, UnknownHttpMethod
+from opium_api.enums import HttpMethod, OrderBookAction
+from opium_api.exceptions import UnknownHttpMethod
 from opium_api.utils import wei_to_ether
 
 
