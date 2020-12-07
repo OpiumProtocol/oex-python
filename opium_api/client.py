@@ -34,6 +34,9 @@ class OpiumClient:
         self.trading_pair = trading_pair
 
     def get_sig(self):
+        """
+        get signature
+        """
         return '0x' + self.generate_access_token()
 
     def get_public_key(self):
