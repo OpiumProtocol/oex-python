@@ -31,7 +31,7 @@ class OpiumApi:
         self._last_recv_time: float = 0
         self._current_channels = None
         self._current_subscription = None
-        self._socket = SocketBase(test_api=False)
+        self._socket = SocketBase(test_api=True)
         self.tickers_tokens = {}
 
     def get_last_message_time(self):
