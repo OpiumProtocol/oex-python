@@ -80,11 +80,11 @@ class OpiumApi:
         """
         ticker_hash = self._get_ticker_hash(trading_pair)
 
-        async for order in self.listen_for(['orderbook:orders:makerAddress'], {'t': ticker_hash,
-                                                                               'c': await self.get_ticker_token(
-                                                                                   ticker_hash),
-                                                                               'addr': maker_addr,
-                                                                               'sig': sig}):
+        async for order in self.listen_for(['orderbook:orders:makerAddress:updates'], {'t': ticker_hash,
+                                                                                       'c': await self.get_ticker_token(
+                                                                                           ticker_hash),
+                                                                                       'addr': maker_addr,
+                                                                                       'sig': sig}):
             yield order
 
     async def listen_for_account_trades(self, trading_pair: str, maker_addr: str, sig: str, new_only=False):
@@ -111,7 +111,6 @@ class OpiumApi:
         ticker_hash = self._get_ticker_hash(trading_pair)
 
         last_id: str = '0'
-
 
         acc_orders = AccountOrders()
 
@@ -202,11 +201,8 @@ class OpiumApi:
     async def get_account_orders(self, trading_pair, maker_addr, access_token):
         async for orders in self.listen_for_account_orders(trading_pair, maker_addr, access_token):
             await self.close()
-            return orders
-            # for order in orders:
-            #     if True:
-            #         await self.close()
-            #         return order
+
+            return [Parser.parse_order(o, trading_pair) for o in orders['d']]
 
     async def get_account_trades(self, trading_pair, maker_addr, access_token):
         async for trades in self.listen_for_account_trades(trading_pair, maker_addr, access_token):

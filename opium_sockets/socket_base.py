@@ -17,7 +17,7 @@ class SocketBase:
 
     def __init__(self, test_api=False, debug=False):
         self.endpoint = (SocketBase.TEST_ENDPOINT if test_api else SocketBase.ENDPOINT) + self.NAMESPACE + '/'
-        self._sio = AsyncClient(engineio_logger=debug, logger=True)
+        self._sio = AsyncClient(engineio_logger=debug, logger=False)
         self.queue: asyncio.Queue = asyncio.Queue()
 
     async def init(self):

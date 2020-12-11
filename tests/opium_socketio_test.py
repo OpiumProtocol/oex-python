@@ -11,11 +11,9 @@ trading_pair = 'OEX-FUT-1JAN-135.00'
 def test_listen_for_orders():
     client = OpiumClient(read_config('public_key'), read_config('private_key'))
 
-    token = '0x' + client.generate_access_token()
-    print(f"token: {token}")
     r = asyncio.run(OpiumApi(test_api=True).listen_for_account_orders(trading_pair=trading_pair,
                                                                       maker_addr=read_config('public_key'),
-                                                                      sig=token))
+                                                                      sig=client.get_sig()))
     print(r)
 
 
@@ -165,9 +163,9 @@ class SocketIOTest:
         async def run():
             await asyncio.sleep(0.1)
             socketio = OpiumApi(test_api=True)
-            p = await socketio.get_account_orders(trading_pair, maker_addr=cls.client.get_public_key(),
-                                                  access_token=cls.token)
-            print(f"p: {p}")
+            orders = await socketio.get_account_orders(trading_pair, maker_addr=cls.client.get_public_key(),
+                                                       access_token=cls.token)
+            print(f"orders: {orders}")
 
         r = asyncio.run(run())
         print(r)
@@ -187,4 +185,4 @@ class SocketIOTest:
 
 if __name__ == '__main__':
     SocketIOTest.get_account_orders()
-    SocketIOTest.get_account_trades()
+    # SocketIOTest.get_account_trades()

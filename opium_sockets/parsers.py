@@ -35,21 +35,21 @@ class Parser:
         }
 
     @staticmethod
-    def parse_order(t, trading_pair):
+    def parse_order(order, trading_pair):
         """
         order = {'i': '5fa128759522f40033ef41c8', 'a': 'BID', 'p': 78, 'q': 17, 'f': -3, 'm': True, 'cT': 1604397173, 'eT': 0}
         """
         return {
-            "status": t['s'],
-            "side": "BUY",
-            "price": t['p'],
-            "quantity": t['q'],
-            "order_id": t['i'],
-            "create_time": t['cT'],
+            "status": order['s'],
+            'side': 'BUY' if order['a'] == 'BID' else 'SELL',
+            "price": order['p'],
+            "quantity": order['q'],
+            "order_id": order['i'],
+            "create_time": order['cT'],
             "type": "LIMIT",
             "instrument_name": trading_pair,
-            "cumulative_quantity": t['q'] - abs(t['f']),
-            "cumulative_value": (t['q'] - abs(t['f'])) * t['p'],
+            "cumulative_quantity": order['q'] - abs(order['f']),
+            "cumulative_value": (order['q'] - abs(order['f'])) * order['p'],
             "fee_currency": "DAI",
         }
 

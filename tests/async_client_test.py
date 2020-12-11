@@ -92,6 +92,6 @@ def check_network_test():
 
 
 if __name__ == '__main__':
-    check_network_test()
+    get_balance_async_test()
     # get_balance_async_test()
     # get_tickers_test()
