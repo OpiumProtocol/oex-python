@@ -20,4 +20,4 @@ rlp==1.2.0
 shellescape==3.8.1
 six==1.15.0
 toolz==0.10.0
-urllib3==1.25.10
+urllib3==1.26.5
